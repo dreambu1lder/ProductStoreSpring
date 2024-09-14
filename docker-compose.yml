@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: productstore
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d/
+
+  tomcat:
+    build: .
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+    depends_on:
+      - postgres
