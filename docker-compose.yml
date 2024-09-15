@@ -10,6 +10,8 @@ services:
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
       - ./docker/init:/docker-entrypoint-initdb.d/
+    networks:
+      - productstore-network
 
   tomcat:
     build: .
@@ -18,3 +20,8 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+    networks:
+      - productstore-network
+networks:
+  productstore-network:
+    driver: bridge

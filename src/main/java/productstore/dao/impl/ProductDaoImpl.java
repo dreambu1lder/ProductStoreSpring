@@ -70,7 +70,10 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public List<Product> getAllProducts() throws SQLException {
         String sql = SqlQueries.SELECT_ALL_FROM.getSql().formatted("*", "products");
-        return DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToProducts);
+        System.out.println("Executing SQL: " + sql);
+        List<Product> products = DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToProducts);
+        System.out.println("Products from DB: " + products); // И этот вывод
+        return products;
     }
 
     @Override
@@ -104,7 +107,9 @@ public class ProductDaoImpl implements ProductDao {
     private List<Product> mapResultSetToProducts(ResultSet rs) throws SQLException {
         List<Product> products = new ArrayList<>();
         while (rs.next()) {
-            products.add(mapResultSetToProduct(rs));
+            Product product = mapResultSetToProduct(rs);
+            System.out.println("Mapped product: " + product); // Добавьте этот вывод
+            products.add(product);
         }
         return products;
     }

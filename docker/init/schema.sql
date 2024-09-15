@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS orders (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS order_products (
+CREATE TABLE IF NOT EXISTS orders_products (
     order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     PRIMARY KEY (order_id, product_id),

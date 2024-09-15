@@ -1,6 +1,7 @@
 package productstore.servlet;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,16 +13,23 @@ import productstore.service.ProductService;
 import productstore.service.apierror.ApiErrorResponse;
 import productstore.service.apierror.ProductNotFoundException;
 import productstore.service.impl.ProductServiceImpl;
-import productstore.servlet.dto.ProductDTO;
+import productstore.servlet.dto.input.ProductInputDTO;
+import productstore.servlet.dto.output.ProductOutputDTO;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet("/api/products/*")
 public class ProductServlet extends HttpServlet {
 
     private final ProductService productService = new ProductServiceImpl(new ProductDaoImpl());
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder().serializeNulls().create();
+
+    @Override
+    public void init() throws ServletException {
+        System.out.println("ProductServlet initialized");
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -29,18 +37,15 @@ public class ProductServlet extends HttpServlet {
 
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-                // Получение всех продуктов
-                List<ProductDTO> products = productService.getAllProducts();
+                List<ProductOutputDTO> products = productService.getAllProducts();
                 writeResponse(resp, HttpServletResponse.SC_OK, products);
             } else if (pathInfo.matches("/\\d+/orders")) {
-                // Новый маршрут для получения продуктов с заказами
                 long id = parseId(pathInfo.split("/")[1]);
-                ProductDTO product = productService.getProductWithOrdersById(id);
+                ProductOutputDTO product = productService.getProductWithOrdersById(id);
                 writeResponse(resp, HttpServletResponse.SC_OK, product);
             } else if (pathInfo.matches("/\\d+")) {
-                // Получение продукта по ID
                 long id = parseId(pathInfo.substring(1));
-                ProductDTO product = productService.getProductById(id);
+                ProductOutputDTO product = productService.getProductById(id);
                 writeResponse(resp, HttpServletResponse.SC_OK, product);
             } else {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid URL path");
@@ -57,17 +62,15 @@ public class ProductServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            if (!req.getReader().ready()) {
-                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is required");
-                return;
-            }
+            String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            ProductInputDTO productInputDTO = gson.fromJson(requestBody, ProductInputDTO.class);
 
-            ProductDTO productDTO = gson.fromJson(req.getReader(), ProductDTO.class);
-            ProductDTO createdProduct = productService.createProduct(productDTO);
+            ProductOutputDTO createdProduct = productService.createProduct(productInputDTO);
             writeResponse(resp, HttpServletResponse.SC_CREATED, createdProduct);
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
         } catch (Exception e) {
+            e.printStackTrace();
             handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
         }
     }
@@ -75,13 +78,10 @@ public class ProductServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            if (!req.getReader().ready()) {
-                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is required");
-                return;
-            }
+            String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            ProductInputDTO productInputDTO = gson.fromJson(requestBody, ProductInputDTO.class);
 
-            ProductDTO productDTO = gson.fromJson(req.getReader(), ProductDTO.class);
-            productService.updateProduct(productDTO);
+            productService.updateProduct(productInputDTO);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (ProductNotFoundException e) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
@@ -127,8 +127,14 @@ public class ProductServlet extends HttpServlet {
     }
 
     private void writeResponse(HttpServletResponse resp, int statusCode, Object data) throws IOException {
-        resp.setContentType("application/json");
-        resp.setStatus(statusCode);
-        resp.getWriter().write(gson.toJson(data));
+        try {
+            resp.setContentType("application/json");
+            resp.setStatus(statusCode);
+            String jsonResponse = gson.toJson(data);
+            resp.getWriter().write(jsonResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

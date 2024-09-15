@@ -47,6 +47,15 @@ public class Order {
                 .withProducts(this.products);
     }
 
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", user=" + user +
+                ", products=" + products +
+                '}';
+    }
+
     public static class Builder {
         private long id;
         private User user;

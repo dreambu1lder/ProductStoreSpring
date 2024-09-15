@@ -58,6 +58,16 @@ public class Product {
                 .withOrders(this.orders);
     }
 
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", orders=" + orders +
+                '}';
+    }
+
     public static class Builder {
         private long id;
         private String name;

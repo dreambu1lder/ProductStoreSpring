@@ -12,12 +12,13 @@ import productstore.dao.impl.OrderDaoImpl;
 import productstore.dao.impl.ProductDaoImpl;
 import productstore.service.apierror.ApiErrorResponse;
 import productstore.service.apierror.OrderNotFoundException;
-import productstore.servlet.dto.OrderDTO;
 import productstore.service.OrderService;
 import productstore.service.impl.OrderServiceImpl;
-import productstore.servlet.dto.ProductDTO;
+import productstore.servlet.dto.input.OrderInputDTO;
+import productstore.servlet.dto.input.ProductIdsRequest;
+import productstore.servlet.dto.output.OrderOutputDTO;
+import productstore.servlet.dto.output.ProductOutputDTO;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -50,19 +51,22 @@ public class OrderServlet extends HttpServlet {
     }
 
     private void handleGetAllOrders(HttpServletResponse resp) throws IOException, SQLException {
-        List<OrderDTO> orders = orderService.getAllOrders();
+        // Используем OrderOutputDTO для отправки данных клиенту
+        List<OrderOutputDTO> orders = orderService.getAllOrders();
         writeResponse(resp, HttpServletResponse.SC_OK, orders);
     }
 
     private void handleGetProductsByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
         long id = Long.parseLong(pathInfo.split("/")[1]);
-        List<ProductDTO> products = orderService.getProductsByOrderId(id);
+        // Здесь также используем ProductOutputDTO
+        List<ProductOutputDTO> products = orderService.getProductsByOrderId(id);
         writeResponse(resp, HttpServletResponse.SC_OK, products);
     }
 
     private void handleGetOrderById(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
         long id = Long.parseLong(pathInfo.split("/")[1]);
-        OrderDTO order = orderService.getOrderById(id);
+        // Используем OrderOutputDTO
+        OrderOutputDTO order = orderService.getOrderById(id);
         writeResponse(resp, HttpServletResponse.SC_OK, order);
     }
 
@@ -70,8 +74,10 @@ public class OrderServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             if (req.getReader().ready()) {
-                OrderDTO orderDTO = gson.fromJson(req.getReader(), OrderDTO.class);
-                OrderDTO createdOrder = orderService.createOrder(orderDTO);
+                // Чтение OrderInputDTO от клиента
+                OrderInputDTO orderInputDTO = gson.fromJson(req.getReader(), OrderInputDTO.class);
+                // Создание заказа и получение выходного DTO
+                OrderOutputDTO createdOrder = orderService.createOrder(orderInputDTO);
                 writeResponse(resp, HttpServletResponse.SC_CREATED, createdOrder);
             } else {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
@@ -90,8 +96,11 @@ public class OrderServlet extends HttpServlet {
             if (pathInfo != null && pathInfo.matches("/\\d+/products")) {
                 if (req.getReader().ready()) {
                     long orderId = Long.parseLong(pathInfo.split("/")[1]);
-                    // Используем TypeToken для корректной десериализации в List<Long>
-                    List<Long> productIds = gson.fromJson(req.getReader(), new TypeToken<List<Long>>() {}.getType());
+
+                    // Изменяем десериализацию, чтобы ожидать объект JSON с ключом "productIds"
+                    ProductIdsRequest productIdsRequest = gson.fromJson(req.getReader(), ProductIdsRequest.class);
+                    List<Long> productIds = productIdsRequest.getProductIds();
+
                     orderService.addProductsToOrder(orderId, productIds);
                     resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 } else {

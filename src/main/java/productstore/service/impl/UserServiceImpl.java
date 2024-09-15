@@ -4,7 +4,8 @@ import productstore.dao.UserDao;
 import productstore.model.User;
 import productstore.service.UserService;
 import productstore.service.apierror.UserNotFoundException;
-import productstore.servlet.dto.UserDTO;
+import productstore.servlet.dto.input.UserInputDTO;
+import productstore.servlet.dto.output.UserOutputDTO;
 import productstore.servlet.mapper.UserMapper;
 
 import java.sql.SQLException;
@@ -21,40 +22,40 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO createUser(UserDTO userDto) throws SQLException {
-        User user = userMapper.toUser(userDto);
+    public UserOutputDTO createUser(UserInputDTO userInputDTO) throws SQLException {
+        User user = userMapper.toUser(userInputDTO);
         User savedUser = userDao.saveUser(user);
-        return userMapper.toUserDTO(savedUser);
+        return userMapper.toUserOutputDTO(savedUser);
     }
 
     @Override
-    public UserDTO getUserById(long id) throws SQLException {
+    public UserOutputDTO getUserById(long id) throws SQLException {
         User user = userDao.getUserById(id);
         if (user == null) {
             throw new UserNotFoundException("User with ID " + id + " not found.");
         }
-        return userMapper.toUserDTO(user);
+        return userMapper.toUserOutputDTO(user);
     }
 
     @Override
-    public List<UserDTO> getAllUsers() throws SQLException {
+    public List<UserOutputDTO> getAllUsers() throws SQLException {
         List<User> users = userDao.getAllUsers();
         return users.stream()
-                .map(userMapper::toUserDTO)
+                .map(userMapper::toUserOutputDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<UserDTO> getUsersWithPagination(int pageNumber, int pageSize) throws SQLException {
+    public List<UserOutputDTO> getUsersWithPagination(int pageNumber, int pageSize) throws SQLException {
         List<User> users = userDao.getUserWithPagination(pageNumber, pageSize);
         return users.stream()
-                .map(userMapper::toUserDTO)
+                .map(userMapper::toUserOutputDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void updateUser(UserDTO userDto) throws SQLException {
-        User user = userMapper.toUser(userDto);
+    public void updateUser(UserInputDTO userInputDTO) throws SQLException {
+        User user = userMapper.toUser(userInputDTO);
         if (userDao.getUserById(user.getId()) == null) {
             throw new UserNotFoundException("User with ID " + user.getId() + " not found.");
         }

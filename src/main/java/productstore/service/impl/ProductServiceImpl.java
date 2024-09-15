@@ -5,10 +5,12 @@ import productstore.model.Order;
 import productstore.model.Product;
 import productstore.service.ProductService;
 import productstore.service.apierror.ProductNotFoundException;
-import productstore.servlet.dto.ProductDTO;
+import productstore.servlet.dto.input.ProductInputDTO;
+import productstore.servlet.dto.output.ProductOutputDTO;
 import productstore.servlet.mapper.ProductMapper;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,40 +24,40 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDTO createProduct(ProductDTO productDto) throws SQLException {
-        Product product = productMapper.toProduct(productDto); // Преобразуем DTO в сущность
+    public ProductOutputDTO createProduct(ProductInputDTO productInputDTO) throws SQLException {
+        Product product = productMapper.toProduct(productInputDTO);
         Product savedProduct = productDao.saveProduct(product);
-        return productMapper.toProductDTO(savedProduct); // Преобразуем сущность обратно в DTO
+        return productMapper.toProductOutputDTO(savedProduct);
     }
 
     @Override
-    public ProductDTO getProductById(long id) throws SQLException {
+    public ProductOutputDTO getProductById(long id) throws SQLException {
         Product product = productDao.getProductById(id);
         if (product == null) {
             throw new ProductNotFoundException("Product with ID " + id + " not found.");
         }
-        return productMapper.toProductDTO(product); // Преобразуем сущность в DTO
+        return productMapper.toProductOutputDTO(product);
     }
 
     @Override
-    public List<ProductDTO> getAllProducts() throws SQLException {
+    public List<ProductOutputDTO> getAllProducts() throws SQLException {
         List<Product> products = productDao.getAllProducts();
         return products.stream()
-                .map(productMapper::toProductDTO) // Используем ProductMapper
+                .map(productMapper::toProductOutputDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProductDTO> getProductsWithPagination(int pageNumber, int pageSize) throws SQLException {
+    public List<ProductOutputDTO> getProductsWithPagination(int pageNumber, int pageSize) throws SQLException {
         List<Product> products = productDao.getProductWithPagination(pageNumber, pageSize);
         return products.stream()
-                .map(productMapper::toProductDTO) // Используем ProductMapper
+                .map(productMapper::toProductOutputDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void updateProduct(ProductDTO productDto) throws SQLException {
-        Product product = productMapper.toProduct(productDto);
+    public void updateProduct(ProductInputDTO productInputDTO) throws SQLException {
+        Product product = productMapper.toProduct(productInputDTO);
         if (productDao.getProductById(product.getId()) == null) {
             throw new ProductNotFoundException("Product with ID " + product.getId() + " not found.");
         }
@@ -71,16 +73,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDTO getProductWithOrdersById(long id) throws SQLException {
+    public ProductOutputDTO getProductWithOrdersById(long id) throws SQLException {
         Product product = productDao.getProductWithOrdersById(id);
         if (product == null) {
             throw new ProductNotFoundException("Product with ID " + id + " not found.");
         }
-        // Преобразуем сущность в DTO, включая идентификаторы заказов
-        ProductDTO productDTO = productMapper.toProductDTO(product);
-        productDTO.setOrderIds(product.getOrders().stream()
-                .map(Order::getId) // Преобразуем список заказов в список их идентификаторов
+        ProductOutputDTO productOutputDTO = productMapper.toProductOutputDTO(product);
+        productOutputDTO.setOrderIds(product.getOrders().stream()
+                .map(Order::getId)
                 .collect(Collectors.toList()));
-        return productDTO;
+        return productOutputDTO;
     }
+
+
 }

@@ -7,8 +7,9 @@ import productstore.model.Product;
 import productstore.service.OrderService;
 import productstore.service.apierror.OrderNotFoundException;
 import productstore.service.apierror.ProductNotFoundException;
-import productstore.servlet.dto.OrderDTO;
-import productstore.servlet.dto.ProductDTO;
+import productstore.servlet.dto.input.OrderInputDTO;
+import productstore.servlet.dto.output.OrderOutputDTO;
+import productstore.servlet.dto.output.ProductOutputDTO;
 import productstore.servlet.mapper.OrderMapper;
 import productstore.servlet.mapper.ProductMapper;
 
@@ -29,15 +30,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDTO createOrder(OrderDTO orderDto) throws SQLException {
-        if (orderDto == null) {
-            throw new IllegalArgumentException("OrderDTO cannot be null.");
+    public OrderOutputDTO createOrder(OrderInputDTO orderInputDTO) throws SQLException {
+        if (orderInputDTO == null) {
+            throw new IllegalArgumentException("OrderInputDTO cannot be null.");
         }
 
-        Order order = orderMapper.toOrder(orderDto);
+        Order order = orderMapper.toOrder(orderInputDTO);
 
         // Получаем продукты по ID и проверяем на null
-        List<Product> products = orderDto.getProductIds().stream()
+        List<Product> products = orderInputDTO.getProductIds().stream()
                 .map(productId -> {
                     try {
                         Product product = productDao.getProductById(productId);
@@ -57,23 +58,23 @@ public class OrderServiceImpl implements OrderService {
 
         order.setProducts(products);
         Order savedOrder = orderDao.saveOrder(order);
-        return orderMapper.toOrderDTO(savedOrder);
+        return orderMapper.toOrderOutputDTO(savedOrder);
     }
 
     @Override
-    public OrderDTO getOrderById(long id) throws SQLException {
+    public OrderOutputDTO getOrderById(long id) throws SQLException {
         Order order = orderDao.getOrderById(id);
         if (order == null) {
             throw new OrderNotFoundException("Order with ID " + id + " not found.");
         }
-        return orderMapper.toOrderDTO(order);
+        return orderMapper.toOrderOutputDTO(order);
     }
 
     @Override
-    public List<OrderDTO> getAllOrders() throws SQLException {
+    public List<OrderOutputDTO> getAllOrders() throws SQLException {
         List<Order> orders = orderDao.getAllOrders();
         return orders.stream()
-                .map(orderMapper::toOrderDTO)
+                .map(orderMapper::toOrderOutputDTO)
                 .collect(Collectors.toList());
     }
 
@@ -106,13 +107,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<ProductDTO> getProductsByOrderId(long orderId) throws SQLException {
+    public List<ProductOutputDTO> getProductsByOrderId(long orderId) throws SQLException {
         Order order = orderDao.getOrderById(orderId);
         if (order == null) {
             throw new OrderNotFoundException("Order with ID " + orderId + " not found.");
         }
         return order.getProducts().stream()
-                .map(productMapper::toProductDTO)
+                .map(productMapper::toProductOutputDTO)
                 .collect(Collectors.toList());
     }
 }

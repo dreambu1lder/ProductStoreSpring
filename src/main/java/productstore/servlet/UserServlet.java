@@ -7,17 +7,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import productstore.dao.UserDao;
 import productstore.dao.impl.UserDaoImpl;
-import productstore.model.User;
 import productstore.service.UserService;
 import productstore.service.apierror.ApiErrorResponse;
 import productstore.service.apierror.UserNotFoundException;
 import productstore.service.impl.UserServiceImpl;
-import productstore.servlet.dto.UserDTO;
+import productstore.servlet.dto.input.UserInputDTO;
+import productstore.servlet.dto.output.UserOutputDTO;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 
@@ -34,12 +32,12 @@ public class UserServlet extends HttpServlet {
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
                 // Получить всех пользователей
-                List<UserDTO> users = userService.getAllUsers();
+                List<UserOutputDTO> users = userService.getAllUsers();
                 writeResponse(resp, HttpServletResponse.SC_OK, users);
             } else {
                 // Получить пользователя по ID
                 long id = parseId(pathInfo.substring(1));
-                UserDTO user = userService.getUserById(id);
+                UserOutputDTO user = userService.getUserById(id);
                 writeResponse(resp, HttpServletResponse.SC_OK, user);
             }
         } catch (UserNotFoundException e) {
@@ -59,8 +57,8 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            UserDTO userDTO = gson.fromJson(req.getReader(), UserDTO.class);
-            UserDTO createdUser = userService.createUser(userDTO);
+            UserInputDTO userInputDTO = gson.fromJson(req.getReader(), UserInputDTO.class);
+            UserOutputDTO createdUser = userService.createUser(userInputDTO);
             writeResponse(resp, HttpServletResponse.SC_CREATED, createdUser);
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
@@ -77,8 +75,8 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            UserDTO userDTO = gson.fromJson(req.getReader(), UserDTO.class);
-            userService.updateUser(userDTO);
+            UserInputDTO userInputDTO = gson.fromJson(req.getReader(), UserInputDTO.class);
+            userService.updateUser(userInputDTO);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (UserNotFoundException e) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
