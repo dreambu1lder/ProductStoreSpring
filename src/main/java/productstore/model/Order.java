@@ -8,6 +8,8 @@ public class Order {
     private User user;
     private List<Product> products;
 
+    public Order() {}
+
     private Order(Builder builder) {
         this.id = builder.id;
         this.user = builder.user;

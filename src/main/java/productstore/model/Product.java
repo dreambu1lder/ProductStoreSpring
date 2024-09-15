@@ -9,6 +9,8 @@ public class Product {
     private double price;
     private List<Order> orders;
 
+    public Product(){}
+
     private Product(Builder builder) {
         this.id = builder.id;
         this.name = builder.name;

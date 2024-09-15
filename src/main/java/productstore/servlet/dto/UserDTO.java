@@ -6,6 +6,8 @@ public class UserDTO {
     private String name;
     private String email;
 
+    public UserDTO() {}
+
     private UserDTO(Builder builder) {
         this.id = builder.id;
         this.name = builder.name;
