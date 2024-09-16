@@ -4,7 +4,7 @@ import java.util.List;
 
 public class OrderOutputDTO {
     private long id;
-    private long userId;
+    private UserOutputDTO user;
     private List<ProductOutputDTO> products;
 
     public long getId() {
@@ -15,12 +15,12 @@ public class OrderOutputDTO {
         this.id = id;
     }
 
-    public long getUserId() {
-        return userId;
+    public UserOutputDTO getUser() {
+        return user;
     }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
+    public void setUser(UserOutputDTO user) {
+        this.user = user;
     }
 
     public List<ProductOutputDTO> getProducts() {
@@ -35,7 +35,7 @@ public class OrderOutputDTO {
     public String toString() {
         return "OrderOutputDTO{" +
                 "id=" + id +
-                ", userId=" + userId +
+                ", user=" + user +
                 ", products=" + products +
                 '}';
     }

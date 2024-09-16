@@ -1,5 +1,6 @@
 package productstore.servlet.dto.output;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserOutputDTO {
@@ -7,9 +8,8 @@ public class UserOutputDTO {
     private long id;
     private String name;
     private String email;
-    private List<Long> orderIds;
+    private List<Long> orderIds = new ArrayList<>();
 
-    // Constructors
     public UserOutputDTO() {}
 
     public UserOutputDTO(long id, String name, String email, List<Long> orderIds) {
@@ -19,7 +19,6 @@ public class UserOutputDTO {
         this.orderIds = orderIds;
     }
 
-    // Getters and Setters
     public long getId() {
         return id;
     }

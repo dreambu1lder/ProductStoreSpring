@@ -1,5 +1,6 @@
 package productstore.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Order {
@@ -52,7 +53,6 @@ public class Order {
         return "Order{" +
                 "id=" + id +
                 ", user=" + user +
-                ", products=" + products +
                 '}';
     }
 
@@ -74,6 +74,14 @@ public class Order {
         public Builder withProducts(List<Product> products) {
             this.products = products;
             return this;
+        }
+
+        // Добавляем геттер для списка продуктов
+        public List<Product> getProducts() {
+            if (this.products == null) {
+                this.products = new ArrayList<>();
+            }
+            return this.products;
         }
 
         public Order build() {

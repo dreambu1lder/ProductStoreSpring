@@ -1,19 +1,32 @@
 package productstore.servlet.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import productstore.model.Order;
+import productstore.model.Product;
+import productstore.model.User;
 import productstore.servlet.dto.input.OrderInputDTO;
 import productstore.servlet.dto.output.OrderOutputDTO;
+import productstore.servlet.dto.output.ProductOutputDTO;
+import productstore.servlet.dto.output.UserOutputDTO;
 
-@Mapper
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Mapper(uses = {UserMapper.class, ProductMapper.class})
 public interface OrderMapper {
     OrderMapper INSTANCE = Mappers.getMapper(OrderMapper.class);
 
-    @Mapping(source = "user.id", target = "userId")
-    OrderOutputDTO toOrderOutputDTO(Order order);
+    // Маппинг Order -> OrderOutputDTO
+    @Mapping(target = "user", source = "user")
+    @Mapping(target = "products", source = "products")
+    OrderOutputDTO toOrderOutputDTO(@Context boolean includeOrderIds, Order order);
 
-    @Mapping(source = "userId", target = "user.id")
+    // Маппинг OrderInputDTO -> Order
+    @Mapping(target = "user.id", source = "userId")
+    @Mapping(target = "id", ignore = true) // Игнорируем, если ID генерируется на уровне базы данных
+    @Mapping(target = "products", ignore = true) // Игнорируем, так как продукты могут устанавливаться позже
     Order toOrder(OrderInputDTO orderInputDTO);
 }

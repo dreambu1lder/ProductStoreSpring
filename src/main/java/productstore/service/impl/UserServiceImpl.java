@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class UserServiceImpl implements UserService {
-
     private final UserDao userDao;
     private final UserMapper userMapper = UserMapper.INSTANCE;
 
@@ -25,7 +24,7 @@ public class UserServiceImpl implements UserService {
     public UserOutputDTO createUser(UserInputDTO userInputDTO) throws SQLException {
         User user = userMapper.toUser(userInputDTO);
         User savedUser = userDao.saveUser(user);
-        return userMapper.toUserOutputDTO(savedUser);
+        return userMapper.toUserOutputDTO(true, savedUser); // Указываем true для включения orderIds
     }
 
     @Override
@@ -34,14 +33,14 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new UserNotFoundException("User with ID " + id + " not found.");
         }
-        return userMapper.toUserOutputDTO(user);
+        return userMapper.toUserOutputDTO(true, user); // Указываем true для включения orderIds
     }
 
     @Override
     public List<UserOutputDTO> getAllUsers() throws SQLException {
         List<User> users = userDao.getAllUsers();
         return users.stream()
-                .map(userMapper::toUserOutputDTO)
+                .map(user -> userMapper.toUserOutputDTO(true, user)) // Указываем true для включения orderIds
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +48,7 @@ public class UserServiceImpl implements UserService {
     public List<UserOutputDTO> getUsersWithPagination(int pageNumber, int pageSize) throws SQLException {
         List<User> users = userDao.getUserWithPagination(pageNumber, pageSize);
         return users.stream()
-                .map(userMapper::toUserOutputDTO)
+                .map(user -> userMapper.toUserOutputDTO(true, user)) // Указываем true для включения orderIds
                 .collect(Collectors.toList());
     }
 

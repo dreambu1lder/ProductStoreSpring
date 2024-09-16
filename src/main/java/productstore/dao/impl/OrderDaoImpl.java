@@ -11,7 +11,10 @@ import productstore.db.DataBaseUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class OrderDaoImpl implements OrderDao {
 
@@ -33,10 +36,17 @@ public class OrderDaoImpl implements OrderDao {
                             long generatedOrderId = generatedKeys.getLong(1);
                             order.setId(generatedOrderId);
 
+                            // Добавляем продукты к заказу и устанавливаем двустороннюю связь
                             for (Product product : order.getProducts()) {
                                 insertOrderProductsStmt.setLong(1, generatedOrderId);
                                 insertOrderProductsStmt.setLong(2, product.getId());
                                 insertOrderProductsStmt.addBatch();
+
+                                // Устанавливаем двустороннюю связь
+                                if (product.getOrders() == null) {
+                                    product.setOrders(new ArrayList<>());
+                                }
+                                product.getOrders().add(order);
                             }
                             insertOrderProductsStmt.executeBatch();
                         } else {
@@ -53,14 +63,25 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public Order getOrderById(long id) throws SQLException {
-        String sql = SqlQueries.SELECT_FROM.getSql().formatted("*", "orders", "id = ?");
+        String sql = "SELECT o.id AS order_id, o.user_id, u.id AS user_id, u.name AS user_name, u.email AS user_email, " +
+                "p.id AS product_id, p.name AS product_name, p.price AS product_price " +
+                "FROM orders o " +
+                "JOIN users u ON o.user_id = u.id " +
+                "LEFT JOIN orders_products op ON o.id = op.order_id " +
+                "LEFT JOIN products p ON op.product_id = p.id " +
+                "WHERE o.id = ?";
         List<Order> orders = getOrders(sql, stmt -> stmt.setLong(1, id));
-        return orders.isEmpty() ? null : orders.getFirst();
+        return orders.isEmpty() ? null : orders.get(0);
     }
 
     @Override
     public List<Order> getAllOrders() throws SQLException {
-        String sql = SqlQueries.SELECT_ALL_FROM.getSql().formatted("*", "orders");
+        String sql = "SELECT o.id AS order_id, o.user_id, u.id AS user_id, u.name AS user_name, u.email AS user_email, " +
+                "p.id AS product_id, p.name AS product_name, p.price AS product_price " +
+                "FROM orders o " +
+                "JOIN users u ON o.user_id = u.id " +
+                "LEFT JOIN orders_products op ON o.id = op.order_id " +
+                "LEFT JOIN products p ON op.product_id = p.id";
         return getOrders(sql, stmt -> {});
     }
 
@@ -71,6 +92,10 @@ public class OrderDaoImpl implements OrderDao {
             stmt.setLong(1, order.getUser().getId());
             stmt.setLong(2, order.getId());
         });
+
+        // Обновляем продукты заказа и двусторонние связи
+        deleteProductsFromOrder(order.getId()); // Удаляем существующие связи
+        addProductsToOrder(order.getId(), order.getProducts()); // Добавляем новые связи
     }
 
     @Override
@@ -111,30 +136,59 @@ public class OrderDaoImpl implements OrderDao {
 
     private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
         return new Order.Builder()
-                .withId(rs.getLong("id"))
-                .withUser(new User.Builder()
-                        .withId(rs.getLong("user_id"))
-                        .build())
+                .withId(rs.getLong("order_id")) // Используем псевдоним order_id из запроса
+                .withUser(mapResultSetToUser(rs)) // Устанавливаем пользователя
+                .withProducts(new ArrayList<>()) // Инициализируем пустой список продуктов
+                .build();
+    }
+
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        return new User.Builder()
+                .withId(rs.getLong("user_id"))
+                .withName(rs.getString("user_name"))
+                .withEmail(rs.getString("user_email"))
                 .build();
     }
 
     private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
+        // Проверяем, есть ли продукт в результатах запроса (может быть null, если заказ не имеет продуктов)
+        long productId = rs.getLong("product_id");
+        if (rs.wasNull()) {
+            return null; // Если product_id равен null, значит у заказа нет связанных продуктов
+        }
         return new Product.Builder()
-                .withId(rs.getLong("id"))
-                .withName(rs.getString("name"))
-                .withPrice(rs.getDouble("price"))
+                .withId(productId)
+                .withName(rs.getString("product_name"))
+                .withPrice(rs.getDouble("product_price"))
+                .withOrders(new ArrayList<>()) // Инициализируем пустой список заказов для двусторонней связи
                 .build();
     }
 
     private List<Order> getOrders(String sql, PreparedStatementSetter setter) throws SQLException {
         return DaoUtils.executeQuery(sql, setter, rs -> {
-            List<Order> orders = new ArrayList<>();
+            Map<Long, Order.Builder> orderMap = new HashMap<>(); // Используем карту для уникальности заказов
             while (rs.next()) {
-                long orderId = rs.getLong("id");
-                List<Product> products = getProductsByOrderId(orderId); // Получаем связанные продукты
-                orders.add(mapResultSetToOrder(rs).toBuilder().withProducts(products).build());
+                long orderId = rs.getLong("order_id");
+                Order.Builder orderBuilder = orderMap.get(orderId);
+
+                if (orderBuilder == null) {
+                    // Если заказа еще нет в карте, создаем новый заказ и добавляем в карту
+                    orderBuilder = mapResultSetToOrder(rs).toBuilder();
+                    orderMap.put(orderId, orderBuilder);
+                }
+
+                // Добавляем продукт к заказу и устанавливаем двустороннюю связь, если он присутствует
+                Product product = mapResultSetToProduct(rs);
+                if (product != null) {
+                    orderBuilder.getProducts().add(product);
+                    product.getOrders().add(orderBuilder.build()); // Устанавливаем двустороннюю связь
+                }
             }
-            return orders;
+
+            // Создаем окончательные заказы из карт
+            return orderMap.values().stream()
+                    .map(Order.Builder::build)
+                    .collect(Collectors.toList());
         });
     }
 
@@ -146,8 +200,21 @@ public class OrderDaoImpl implements OrderDao {
                 insertOrderProductsStmt.setLong(1, orderId);
                 insertOrderProductsStmt.setLong(2, product.getId());
                 insertOrderProductsStmt.addBatch();
+
+                // Устанавливаем двустороннюю связь
+                if (product.getOrders() == null) {
+                    product.setOrders(new ArrayList<>());
+                }
+                product.getOrders().add(new Order.Builder().withId(orderId).build());
             }
             insertOrderProductsStmt.executeBatch();
         }
+    }
+
+    private void deleteProductsFromOrder(long orderId) throws SQLException {
+        String deleteOrderProductsSql = SqlQueries.DELETE_FROM.getSql().formatted("orders_products", "order_id = ?");
+        DaoUtils.executeUpdate(deleteOrderProductsSql, stmt -> {
+            stmt.setLong(1, orderId);
+        });
     }
 }

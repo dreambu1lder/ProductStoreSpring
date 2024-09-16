@@ -1,7 +1,6 @@
 package productstore.service.impl;
 
 import productstore.dao.ProductDao;
-import productstore.model.Order;
 import productstore.model.Product;
 import productstore.service.ProductService;
 import productstore.service.apierror.ProductNotFoundException;
@@ -10,12 +9,10 @@ import productstore.servlet.dto.output.ProductOutputDTO;
 import productstore.servlet.mapper.ProductMapper;
 
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ProductServiceImpl implements ProductService {
-
     private final ProductDao productDao;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
@@ -27,7 +24,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductOutputDTO createProduct(ProductInputDTO productInputDTO) throws SQLException {
         Product product = productMapper.toProduct(productInputDTO);
         Product savedProduct = productDao.saveProduct(product);
-        return productMapper.toProductOutputDTO(savedProduct);
+        return productMapper.toProductOutputDTO(true, savedProduct); // Указываем true для включения orderIds
     }
 
     @Override
@@ -36,14 +33,14 @@ public class ProductServiceImpl implements ProductService {
         if (product == null) {
             throw new ProductNotFoundException("Product with ID " + id + " not found.");
         }
-        return productMapper.toProductOutputDTO(product);
+        return productMapper.toProductOutputDTO(true, product); // Указываем true для включения orderIds
     }
 
     @Override
     public List<ProductOutputDTO> getAllProducts() throws SQLException {
         List<Product> products = productDao.getAllProducts();
         return products.stream()
-                .map(productMapper::toProductOutputDTO)
+                .map(product -> productMapper.toProductOutputDTO(true, product)) // Указываем true для включения orderIds
                 .collect(Collectors.toList());
     }
 
@@ -51,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductOutputDTO> getProductsWithPagination(int pageNumber, int pageSize) throws SQLException {
         List<Product> products = productDao.getProductWithPagination(pageNumber, pageSize);
         return products.stream()
-                .map(productMapper::toProductOutputDTO)
+                .map(product -> productMapper.toProductOutputDTO(true, product)) // Указываем true для включения orderIds
                 .collect(Collectors.toList());
     }
 
@@ -78,12 +75,6 @@ public class ProductServiceImpl implements ProductService {
         if (product == null) {
             throw new ProductNotFoundException("Product with ID " + id + " not found.");
         }
-        ProductOutputDTO productOutputDTO = productMapper.toProductOutputDTO(product);
-        productOutputDTO.setOrderIds(product.getOrders().stream()
-                .map(Order::getId)
-                .collect(Collectors.toList()));
-        return productOutputDTO;
+        return productMapper.toProductOutputDTO(true, product); // Указываем true для включения orderIds
     }
-
-
 }

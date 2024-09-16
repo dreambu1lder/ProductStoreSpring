@@ -14,11 +14,11 @@ import productstore.servlet.mapper.OrderMapper;
 import productstore.servlet.mapper.ProductMapper;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class OrderServiceImpl implements OrderService {
-
     private final OrderDao orderDao;
     private final ProductDao productDao;
     private final OrderMapper orderMapper = OrderMapper.INSTANCE;
@@ -56,9 +56,17 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalArgumentException("Order must contain at least one product.");
         }
 
+        // Устанавливаем двустороннюю связь
         order.setProducts(products);
+        products.forEach(product -> {
+            if (product.getOrders() == null) {
+                product.setOrders(new ArrayList<>());
+            }
+            product.getOrders().add(order);
+        });
+
         Order savedOrder = orderDao.saveOrder(order);
-        return orderMapper.toOrderOutputDTO(savedOrder);
+        return orderMapper.toOrderOutputDTO(false, savedOrder); // Передаем false для исключения вложенных orderIds
     }
 
     @Override
@@ -67,21 +75,22 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             throw new OrderNotFoundException("Order with ID " + id + " not found.");
         }
-        return orderMapper.toOrderOutputDTO(order);
+        return orderMapper.toOrderOutputDTO(false, order); // Передаем false для исключения вложенных orderIds
     }
 
     @Override
     public List<OrderOutputDTO> getAllOrders() throws SQLException {
         List<Order> orders = orderDao.getAllOrders();
         return orders.stream()
-                .map(orderMapper::toOrderOutputDTO)
+                .map(order -> orderMapper.toOrderOutputDTO(false, order)) // Передаем false для исключения вложенных orderIds
                 .collect(Collectors.toList());
     }
 
     @Override
     public void addProductsToOrder(long orderId, List<Long> productIds) throws SQLException {
         // Проверяем, что заказ существует
-        if (orderDao.getOrderById(orderId) == null) {
+        Order order = orderDao.getOrderById(orderId);
+        if (order == null) {
             throw new OrderNotFoundException("Order with ID " + orderId + " not found.");
         }
 
@@ -103,6 +112,14 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalArgumentException("At least one product must be added to the order.");
         }
 
+        // Устанавливаем двустороннюю связь
+        products.forEach(product -> {
+            if (product.getOrders() == null) {
+                product.setOrders(new ArrayList<>());
+            }
+            product.getOrders().add(order);
+        });
+
         orderDao.addProductsToOrder(orderId, products);
     }
 
@@ -113,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderNotFoundException("Order with ID " + orderId + " not found.");
         }
         return order.getProducts().stream()
-                .map(productMapper::toProductOutputDTO)
+                .map(product -> productMapper.toProductOutputDTO(false, product))
                 .collect(Collectors.toList());
     }
 }

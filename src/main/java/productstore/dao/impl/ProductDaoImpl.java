@@ -3,6 +3,7 @@ package productstore.dao.impl;
 import productstore.dao.SqlQueries;
 import productstore.dao.ProductDao;
 import productstore.dao.util.DaoUtils;
+import productstore.db.DataBaseUtil;
 import productstore.model.Order;
 import productstore.model.Product;
 
@@ -20,6 +21,17 @@ public class ProductDaoImpl implements ProductDao {
         }, generatedKeys -> {
             if (generatedKeys.next()) {
                 product.setId(generatedKeys.getLong(1));
+
+                // Устанавливаем двустороннюю связь для заказов
+                if (product.getOrders() != null) {
+                    for (Order order : product.getOrders()) {
+                        if (order.getProducts() == null) {
+                            order.setProducts(new ArrayList<>());
+                        }
+                        order.getProducts().add(product);
+                    }
+                }
+
                 return product;
             } else {
                 throw new SQLException("Не удалось сгенерировать айди для сущности product.");
@@ -33,7 +45,18 @@ public class ProductDaoImpl implements ProductDao {
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setInt(1, pageSize);
             stmt.setInt(2, (pageNumber - 1) * pageSize);
-        }, this::mapResultSetToProducts);
+        }, rs -> {
+            List<Product> products = mapResultSetToProducts(rs);
+            // Устанавливаем двустороннюю связь для каждого продукта
+            for (Product product : products) {
+                List<Order> orders = getOrdersByProductId(product.getId());
+                product.setOrders(orders);
+                for (Order order : orders) {
+                    order.getProducts().add(product); // Устанавливаем связь с заказом
+                }
+            }
+            return products;
+        });
     }
 
     @Override
@@ -52,6 +75,9 @@ public class ProductDaoImpl implements ProductDao {
             stmt.setDouble(2, product.getPrice());
             stmt.setLong(3, product.getId());
         });
+
+        // Обновляем двустороннюю связь с заказами
+        updateOrdersForProduct(product);
     }
 
     @Override
@@ -61,7 +87,14 @@ public class ProductDaoImpl implements ProductDao {
             stmt.setLong(1, id);
         }, rs -> {
             if (rs.next()) {
-                return mapResultSetToProduct(rs);
+                Product product = mapResultSetToProduct(rs);
+                List<Order> orders = getOrdersByProductId(product.getId());
+                product.setOrders(orders);
+                // Устанавливаем двустороннюю связь
+                for (Order order : orders) {
+                    order.getProducts().add(product);
+                }
+                return product;
             }
             return null;
         });
@@ -72,7 +105,17 @@ public class ProductDaoImpl implements ProductDao {
         String sql = SqlQueries.SELECT_ALL_FROM.getSql().formatted("*", "products");
         System.out.println("Executing SQL: " + sql);
         List<Product> products = DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToProducts);
-        System.out.println("Products from DB: " + products); // И этот вывод
+
+        // Устанавливаем двустороннюю связь для всех продуктов
+        for (Product product : products) {
+            List<Order> orders = getOrdersByProductId(product.getId());
+            product.setOrders(orders);
+            for (Order order : orders) {
+                order.getProducts().add(product);
+            }
+        }
+
+        System.out.println("Products from DB: " + products);
         return products;
     }
 
@@ -80,7 +123,7 @@ public class ProductDaoImpl implements ProductDao {
     public Product getProductWithOrdersById(long id) throws SQLException {
         String sql = "SELECT p.id, p.name, p.price, o.id AS order_id " +
                 "FROM products p " +
-                "LEFT JOIN order_products op ON p.id = op.product_id " +
+                "LEFT JOIN orders_products op ON p.id = op.product_id " +
                 "LEFT JOIN orders o ON op.order_id = o.id " +
                 "WHERE p.id = ?";
 
@@ -96,7 +139,9 @@ public class ProductDaoImpl implements ProductDao {
 
                 long orderId = rs.getLong("order_id");
                 if (orderId > 0) {
-                    orders.add(mapResultSetToOrder(rs));
+                    Order order = mapResultSetToOrder(rs);
+                    orders.add(order);
+                    order.getProducts().add(productBuilder.build()); // Устанавливаем двустороннюю связь
                 }
             }
 
@@ -108,7 +153,7 @@ public class ProductDaoImpl implements ProductDao {
         List<Product> products = new ArrayList<>();
         while (rs.next()) {
             Product product = mapResultSetToProduct(rs);
-            System.out.println("Mapped product: " + product); // Добавьте этот вывод
+            System.out.println("Mapped product: " + product);
             products.add(product);
         }
         return products;
@@ -119,12 +164,54 @@ public class ProductDaoImpl implements ProductDao {
                 .withId(rs.getLong("id"))
                 .withName(rs.getString("name"))
                 .withPrice(rs.getDouble("price"))
+                .withOrders(new ArrayList<>()) // Инициализируем пустой список заказов
                 .build();
     }
 
     private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
         return new Order.Builder()
                 .withId(rs.getLong("order_id"))
+                .withProducts(new ArrayList<>()) // Инициализируем пустой список продуктов
                 .build();
+    }
+
+    private List<Order> getOrdersByProductId(long productId) throws SQLException {
+        String sql = "SELECT o.id AS order_id " +
+                "FROM orders o " +
+                "JOIN orders_products op ON o.id = op.order_id " +
+                "WHERE op.product_id = ?";
+        return DaoUtils.executeQuery(sql, stmt -> {
+            stmt.setLong(1, productId);
+        }, rs -> {
+            List<Order> orders = new ArrayList<>();
+            while (rs.next()) {
+                orders.add(mapResultSetToOrder(rs));
+            }
+            return orders;
+        });
+    }
+
+    private void updateOrdersForProduct(Product product) throws SQLException {
+        // Удаляем все связи с заказами
+        String deleteSql = SqlQueries.DELETE_FROM.getSql().formatted("orders_products", "product_id = ?");
+        DaoUtils.executeUpdate(deleteSql, stmt -> {
+            stmt.setLong(1, product.getId());
+        });
+
+        // Добавляем новые связи
+        if (product.getOrders() != null && !product.getOrders().isEmpty()) {
+            String insertSql = SqlQueries.INSERT_INTO.getSql().formatted("orders_products", "order_id, product_id", "?, ?");
+            try (Connection connection = DataBaseUtil.getConnection();
+                 PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                for (Order order : product.getOrders()) {
+                    insertStmt.setLong(1, order.getId());
+                    insertStmt.setLong(2, product.getId());
+                    insertStmt.addBatch();
+                    // Устанавливаем двустороннюю связь
+                    order.getProducts().add(product);
+                }
+                insertStmt.executeBatch();
+            }
+        }
     }
 }

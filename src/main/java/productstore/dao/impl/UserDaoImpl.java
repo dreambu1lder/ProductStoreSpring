@@ -3,17 +3,24 @@ package productstore.dao.impl;
 import productstore.dao.SqlQueries;
 import productstore.dao.UserDao;
 import productstore.dao.util.DaoUtils;
+import productstore.model.Order;
 import productstore.model.User;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserDaoImpl implements UserDao {
 
     @Override
     public List<User> getUserWithPagination(int pageNumber, int pageSize) throws SQLException {
-        String sql = SqlQueries.SELECT_WITH_PAGINATION.getSql().formatted("*", "users", "id", "?", "?");
+        String sql = "SELECT u.id AS user_id, u.name, u.email, o.id AS order_id " +
+                "FROM users u " +
+                "LEFT JOIN orders o ON u.id = o.user_id " +
+                "ORDER BY u.id " +
+                "LIMIT ? OFFSET ?";
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setInt(1, pageSize);
             stmt.setInt(2, (pageNumber - 1) * pageSize);
@@ -37,20 +44,37 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public User getUserById(long id) throws SQLException {
-        String sql = SqlQueries.SELECT_FROM.getSql().formatted("*", "users", "id = ?");
+        String sql = "SELECT u.id AS user_id, u.name, u.email, o.id AS order_id " +
+                "FROM users u " +
+                "LEFT JOIN orders o ON u.id = o.user_id " +
+                "WHERE u.id = ?";
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setLong(1, id);
         }, rs -> {
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
+            Map<Long, User> userMap = new HashMap<>();
+            while (rs.next()) {
+                long userId = rs.getLong("user_id");
+                User user = userMap.get(userId);
+
+                if (user == null) {
+                    user = mapResultSetToUser(rs);
+                    userMap.put(userId, user);
+                }
+
+                long orderId = rs.getLong("order_id");
+                if (orderId > 0) {
+                    user.getOrders().add(new Order.Builder().withId(orderId).build());
+                }
             }
-            return null;
+            return userMap.isEmpty() ? null : userMap.values().iterator().next();
         });
     }
 
     @Override
     public List<User> getAllUsers() throws SQLException {
-        String sql = SqlQueries.SELECT_ALL_FROM.getSql().formatted("*", "users");
+        String sql = "SELECT u.id AS user_id, u.name, u.email, o.id AS order_id " +
+                "FROM users u " +
+                "LEFT JOIN orders o ON u.id = o.user_id";
         return DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToUsers);
     }
 
@@ -73,19 +97,30 @@ public class UserDaoImpl implements UserDao {
     }
 
     private List<User> mapResultSetToUsers(ResultSet rs) throws SQLException {
-        List<User> users = new ArrayList<>();
+        Map<Long, User> userMap = new HashMap<>();
         while (rs.next()) {
-            users.add(mapResultSetToUser(rs));
+            long userId = rs.getLong("user_id");
+            User user = userMap.get(userId);
+
+            if (user == null) {
+                user = mapResultSetToUser(rs);
+                userMap.put(userId, user);
+            }
+
+            long orderId = rs.getLong("order_id");
+            if (orderId > 0) {
+                user.getOrders().add(new Order.Builder().withId(orderId).build());
+            }
         }
-        return users;
+        return new ArrayList<>(userMap.values());
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         return new User.Builder()
-                .withId(rs.getLong("id"))
+                .withId(rs.getLong("user_id"))
                 .withName(rs.getString("name"))
                 .withEmail(rs.getString("email"))
+                .withOrders(new ArrayList<>()) // Инициализируем пустой список заказов
                 .build();
     }
-
 }

@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import productstore.dao.impl.OrderDaoImpl;
 import productstore.dao.impl.ProductDaoImpl;
+import productstore.dao.impl.UserDaoImpl;
+import productstore.model.Order;
 import productstore.service.apierror.ApiErrorResponse;
 import productstore.service.apierror.OrderNotFoundException;
 import productstore.service.OrderService;
@@ -18,6 +20,7 @@ import productstore.servlet.dto.input.OrderInputDTO;
 import productstore.servlet.dto.input.ProductIdsRequest;
 import productstore.servlet.dto.output.OrderOutputDTO;
 import productstore.servlet.dto.output.ProductOutputDTO;
+import productstore.servlet.dto.output.UserOutputDTO;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -26,18 +29,24 @@ import java.util.List;
 @WebServlet("/api/orders/*")
 public class OrderServlet extends HttpServlet {
 
-    private final OrderService orderService = new OrderServiceImpl(new OrderDaoImpl(), new ProductDaoImpl());
+    private final OrderService orderService;
     private final Gson gson = new Gson();
+
+    public OrderServlet() {
+        this.orderService = new OrderServiceImpl(new OrderDaoImpl(), new ProductDaoImpl());
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-
+        System.out.println("Начало");
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
                 handleGetAllOrders(resp);
             } else if (pathInfo.matches("/\\d+/products")) {
                 handleGetProductsByOrderId(resp, pathInfo);
+            } else if (pathInfo.matches("/\\d+/users")) { // Добавляем проверку для /orders/{id}/users
+                handleGetUserByOrderId(resp, pathInfo);
             } else if (pathInfo.matches("/\\d+")) {
                 handleGetOrderById(resp, pathInfo);
             } else {
@@ -50,9 +59,25 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
+    private void handleGetUserByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
+        long orderId = Long.parseLong(pathInfo.split("/")[1]);
+
+        // Получаем заказ и затем пользователя, связанного с этим заказом
+        OrderOutputDTO order = orderService.getOrderById(orderId);
+        if (order == null) {
+            handleException(resp, HttpServletResponse.SC_NOT_FOUND, "Order with ID " + orderId + " not found.");
+            return;
+        }
+
+        // Получаем пользователя из заказа
+        UserOutputDTO user = order.getUser();
+        writeResponse(resp, HttpServletResponse.SC_OK, user);
+    }
+
     private void handleGetAllOrders(HttpServletResponse resp) throws IOException, SQLException {
         // Используем OrderOutputDTO для отправки данных клиенту
         List<OrderOutputDTO> orders = orderService.getAllOrders();
+        System.out.println(orders.toString());
         writeResponse(resp, HttpServletResponse.SC_OK, orders);
     }
 
@@ -73,6 +98,7 @@ public class OrderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            System.out.println("Post");
             if (req.getReader().ready()) {
                 // Чтение OrderInputDTO от клиента
                 OrderInputDTO orderInputDTO = gson.fromJson(req.getReader(), OrderInputDTO.class);
