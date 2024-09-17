@@ -5,7 +5,6 @@ public class UserInputDTO {
     private String name;
     private String email;
 
-    // Constructors
     public UserInputDTO() {}
 
     public UserInputDTO(String name, String email) {
@@ -13,7 +12,6 @@ public class UserInputDTO {
         this.email = email;
     }
 
-    // Getters and Setters
     public String getName() {
         return name;
     }

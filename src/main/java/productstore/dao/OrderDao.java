@@ -15,4 +15,5 @@ public interface OrderDao {
     void deleteOrder(long id) throws SQLException;
     void addProductsToOrder(long orderId, List<Product> products) throws SQLException;
     List<Product> getProductsByOrderId(long orderId) throws SQLException;
+    List<Order> getOrdersWithPagination(int pageNumber, int pageSize) throws SQLException;
 }

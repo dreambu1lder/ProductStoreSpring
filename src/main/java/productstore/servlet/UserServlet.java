@@ -14,6 +14,7 @@ import productstore.service.apierror.UserNotFoundException;
 import productstore.service.impl.UserServiceImpl;
 import productstore.servlet.dto.input.UserInputDTO;
 import productstore.servlet.dto.output.UserOutputDTO;
+import productstore.servlet.util.PaginationUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,11 +32,13 @@ public class UserServlet extends HttpServlet {
 
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-                // Получить всех пользователей
-                List<UserOutputDTO> users = userService.getAllUsers();
+
+                int pageNumber = PaginationUtils.getPageNumber(req);
+                int pageSize = PaginationUtils.getPageSize(req);
+
+                List<UserOutputDTO> users = userService.getUsersWithPagination(pageNumber, pageSize);
                 writeResponse(resp, HttpServletResponse.SC_OK, users);
             } else {
-                // Получить пользователя по ID
                 long id = parseId(pathInfo.substring(1));
                 UserOutputDTO user = userService.getUserById(id);
                 writeResponse(resp, HttpServletResponse.SC_OK, user);

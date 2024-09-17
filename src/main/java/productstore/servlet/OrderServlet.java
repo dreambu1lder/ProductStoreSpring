@@ -21,6 +21,7 @@ import productstore.servlet.dto.input.ProductIdsRequest;
 import productstore.servlet.dto.output.OrderOutputDTO;
 import productstore.servlet.dto.output.ProductOutputDTO;
 import productstore.servlet.dto.output.UserOutputDTO;
+import productstore.servlet.util.PaginationUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -42,10 +43,10 @@ public class OrderServlet extends HttpServlet {
         System.out.println("Начало");
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-                handleGetAllOrders(resp);
-            } else if (pathInfo.matches("/\\d+/products")) {
+                handleGetAllOrders(resp, req); // Передаем запрос
+            }  else if (pathInfo.matches("/\\d+/products")) {
                 handleGetProductsByOrderId(resp, pathInfo);
-            } else if (pathInfo.matches("/\\d+/users")) { // Добавляем проверку для /orders/{id}/users
+            } else if (pathInfo.matches("/\\d+/users")) {
                 handleGetUserByOrderId(resp, pathInfo);
             } else if (pathInfo.matches("/\\d+")) {
                 handleGetOrderById(resp, pathInfo);
@@ -62,35 +63,36 @@ public class OrderServlet extends HttpServlet {
     private void handleGetUserByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
         long orderId = Long.parseLong(pathInfo.split("/")[1]);
 
-        // Получаем заказ и затем пользователя, связанного с этим заказом
         OrderOutputDTO order = orderService.getOrderById(orderId);
         if (order == null) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, "Order with ID " + orderId + " not found.");
             return;
         }
 
-        // Получаем пользователя из заказа
         UserOutputDTO user = order.getUser();
         writeResponse(resp, HttpServletResponse.SC_OK, user);
     }
 
-    private void handleGetAllOrders(HttpServletResponse resp) throws IOException, SQLException {
-        // Используем OrderOutputDTO для отправки данных клиенту
-        List<OrderOutputDTO> orders = orderService.getAllOrders();
-        System.out.println(orders.toString());
-        writeResponse(resp, HttpServletResponse.SC_OK, orders);
+    private void handleGetAllOrders(HttpServletResponse resp, HttpServletRequest req) throws IOException, SQLException {
+        try {
+            int pageNumber = PaginationUtils.getPageNumber(req);
+            int pageSize = PaginationUtils.getPageSize(req);
+
+            List<OrderOutputDTO> orders = orderService.getOrdersWithPagination(pageNumber, pageSize);
+            writeResponse(resp, HttpServletResponse.SC_OK, orders);
+        } catch (NumberFormatException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid pagination parameters");
+        }
     }
 
     private void handleGetProductsByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
         long id = Long.parseLong(pathInfo.split("/")[1]);
-        // Здесь также используем ProductOutputDTO
         List<ProductOutputDTO> products = orderService.getProductsByOrderId(id);
         writeResponse(resp, HttpServletResponse.SC_OK, products);
     }
 
     private void handleGetOrderById(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
         long id = Long.parseLong(pathInfo.split("/")[1]);
-        // Используем OrderOutputDTO
         OrderOutputDTO order = orderService.getOrderById(id);
         writeResponse(resp, HttpServletResponse.SC_OK, order);
     }
@@ -100,9 +102,7 @@ public class OrderServlet extends HttpServlet {
         try {
             System.out.println("Post");
             if (req.getReader().ready()) {
-                // Чтение OrderInputDTO от клиента
                 OrderInputDTO orderInputDTO = gson.fromJson(req.getReader(), OrderInputDTO.class);
-                // Создание заказа и получение выходного DTO
                 OrderOutputDTO createdOrder = orderService.createOrder(orderInputDTO);
                 writeResponse(resp, HttpServletResponse.SC_CREATED, createdOrder);
             } else {
@@ -123,7 +123,6 @@ public class OrderServlet extends HttpServlet {
                 if (req.getReader().ready()) {
                     long orderId = Long.parseLong(pathInfo.split("/")[1]);
 
-                    // Изменяем десериализацию, чтобы ожидать объект JSON с ключом "productIds"
                     ProductIdsRequest productIdsRequest = gson.fromJson(req.getReader(), ProductIdsRequest.class);
                     List<Long> productIds = productIdsRequest.getProductIds();
 

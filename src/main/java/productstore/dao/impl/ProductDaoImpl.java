@@ -22,7 +22,6 @@ public class ProductDaoImpl implements ProductDao {
             if (generatedKeys.next()) {
                 product.setId(generatedKeys.getLong(1));
 
-                // Устанавливаем двустороннюю связь для заказов
                 if (product.getOrders() != null) {
                     for (Order order : product.getOrders()) {
                         if (order.getProducts() == null) {
@@ -47,12 +46,11 @@ public class ProductDaoImpl implements ProductDao {
             stmt.setInt(2, (pageNumber - 1) * pageSize);
         }, rs -> {
             List<Product> products = mapResultSetToProducts(rs);
-            // Устанавливаем двустороннюю связь для каждого продукта
             for (Product product : products) {
                 List<Order> orders = getOrdersByProductId(product.getId());
                 product.setOrders(orders);
                 for (Order order : orders) {
-                    order.getProducts().add(product); // Устанавливаем связь с заказом
+                    order.getProducts().add(product);
                 }
             }
             return products;
@@ -76,7 +74,6 @@ public class ProductDaoImpl implements ProductDao {
             stmt.setLong(3, product.getId());
         });
 
-        // Обновляем двустороннюю связь с заказами
         updateOrdersForProduct(product);
     }
 
@@ -90,7 +87,6 @@ public class ProductDaoImpl implements ProductDao {
                 Product product = mapResultSetToProduct(rs);
                 List<Order> orders = getOrdersByProductId(product.getId());
                 product.setOrders(orders);
-                // Устанавливаем двустороннюю связь
                 for (Order order : orders) {
                     order.getProducts().add(product);
                 }
@@ -106,7 +102,6 @@ public class ProductDaoImpl implements ProductDao {
         System.out.println("Executing SQL: " + sql);
         List<Product> products = DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToProducts);
 
-        // Устанавливаем двустороннюю связь для всех продуктов
         for (Product product : products) {
             List<Order> orders = getOrdersByProductId(product.getId());
             product.setOrders(orders);
@@ -141,7 +136,7 @@ public class ProductDaoImpl implements ProductDao {
                 if (orderId > 0) {
                     Order order = mapResultSetToOrder(rs);
                     orders.add(order);
-                    order.getProducts().add(productBuilder.build()); // Устанавливаем двустороннюю связь
+                    order.getProducts().add(productBuilder.build());
                 }
             }
 
@@ -164,14 +159,14 @@ public class ProductDaoImpl implements ProductDao {
                 .withId(rs.getLong("id"))
                 .withName(rs.getString("name"))
                 .withPrice(rs.getDouble("price"))
-                .withOrders(new ArrayList<>()) // Инициализируем пустой список заказов
+                .withOrders(new ArrayList<>())
                 .build();
     }
 
     private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
         return new Order.Builder()
                 .withId(rs.getLong("order_id"))
-                .withProducts(new ArrayList<>()) // Инициализируем пустой список продуктов
+                .withProducts(new ArrayList<>())
                 .build();
     }
 

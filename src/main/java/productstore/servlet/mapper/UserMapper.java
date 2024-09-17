@@ -11,7 +11,6 @@ import productstore.model.User;
 import productstore.servlet.dto.output.UserOutputDTO;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,16 +18,13 @@ import java.util.stream.Collectors;
 public interface UserMapper {
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    // Маппинг UserInputDTO -> User
-    @Mapping(target = "id", ignore = true) // Игнорируем, если ID генерируется на уровне базы данных
-    @Mapping(target = "orders", ignore = true) // Игнорируем, так как заказы могут устанавливаться позже
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "orders", ignore = true)
     User toUser(UserInputDTO userInputDTO);
 
-    // Маппинг User -> UserOutputDTO
     @Mapping(target = "orderIds", expression = "java(includeOrderIds ? ordersToOrderIds(user.getOrders()) : null)")
     UserOutputDTO toUserOutputDTO(@Context boolean includeOrderIds, User user);
 
-    // Преобразование списка Order -> списка orderIds
     @Named("ordersToOrderIds")
     default List<Long> ordersToOrderIds(List<Order> orders) {
         if (orders == null) {

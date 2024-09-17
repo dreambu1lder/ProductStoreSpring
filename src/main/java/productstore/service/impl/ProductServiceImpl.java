@@ -24,7 +24,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductOutputDTO createProduct(ProductInputDTO productInputDTO) throws SQLException {
         Product product = productMapper.toProduct(productInputDTO);
         Product savedProduct = productDao.saveProduct(product);
-        return productMapper.toProductOutputDTO(true, savedProduct); // Указываем true для включения orderIds
+        return productMapper.toProductOutputDTO(true, savedProduct);
     }
 
     @Override
@@ -33,14 +33,14 @@ public class ProductServiceImpl implements ProductService {
         if (product == null) {
             throw new ProductNotFoundException("Product with ID " + id + " not found.");
         }
-        return productMapper.toProductOutputDTO(true, product); // Указываем true для включения orderIds
+        return productMapper.toProductOutputDTO(true, product);
     }
 
     @Override
     public List<ProductOutputDTO> getAllProducts() throws SQLException {
         List<Product> products = productDao.getAllProducts();
         return products.stream()
-                .map(product -> productMapper.toProductOutputDTO(true, product)) // Указываем true для включения orderIds
+                .map(product -> productMapper.toProductOutputDTO(true, product))
                 .collect(Collectors.toList());
     }
 
@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductOutputDTO> getProductsWithPagination(int pageNumber, int pageSize) throws SQLException {
         List<Product> products = productDao.getProductWithPagination(pageNumber, pageSize);
         return products.stream()
-                .map(product -> productMapper.toProductOutputDTO(true, product)) // Указываем true для включения orderIds
+                .map(product -> productMapper.toProductOutputDTO(true, product))
                 .collect(Collectors.toList());
     }
 
@@ -75,6 +75,6 @@ public class ProductServiceImpl implements ProductService {
         if (product == null) {
             throw new ProductNotFoundException("Product with ID " + id + " not found.");
         }
-        return productMapper.toProductOutputDTO(true, product); // Указываем true для включения orderIds
+        return productMapper.toProductOutputDTO(true, product);
     }
 }

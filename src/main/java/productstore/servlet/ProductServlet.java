@@ -15,6 +15,7 @@ import productstore.service.apierror.ProductNotFoundException;
 import productstore.service.impl.ProductServiceImpl;
 import productstore.servlet.dto.input.ProductInputDTO;
 import productstore.servlet.dto.output.ProductOutputDTO;
+import productstore.servlet.util.PaginationUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,7 +38,10 @@ public class ProductServlet extends HttpServlet {
 
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-                List<ProductOutputDTO> products = productService.getAllProducts();
+                int pageNumber = PaginationUtils.getPageNumber(req);
+                int pageSize = PaginationUtils.getPageSize(req);
+
+                List<ProductOutputDTO> products = productService.getProductsWithPagination(pageNumber, pageSize);
                 writeResponse(resp, HttpServletResponse.SC_OK, products);
             } else if (pathInfo.matches("/\\d+/orders")) {
                 long id = parseId(pathInfo.split("/")[1]);

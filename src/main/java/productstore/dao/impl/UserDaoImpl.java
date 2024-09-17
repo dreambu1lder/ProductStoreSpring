@@ -120,7 +120,7 @@ public class UserDaoImpl implements UserDao {
                 .withId(rs.getLong("user_id"))
                 .withName(rs.getString("name"))
                 .withEmail(rs.getString("email"))
-                .withOrders(new ArrayList<>()) // Инициализируем пустой список заказов
+                .withOrders(new ArrayList<>())
                 .build();
     }
 }

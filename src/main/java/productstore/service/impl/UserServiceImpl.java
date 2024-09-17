@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
     public UserOutputDTO createUser(UserInputDTO userInputDTO) throws SQLException {
         User user = userMapper.toUser(userInputDTO);
         User savedUser = userDao.saveUser(user);
-        return userMapper.toUserOutputDTO(true, savedUser); // Указываем true для включения orderIds
+        return userMapper.toUserOutputDTO(true, savedUser);
     }
 
     @Override
@@ -33,14 +33,14 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new UserNotFoundException("User with ID " + id + " not found.");
         }
-        return userMapper.toUserOutputDTO(true, user); // Указываем true для включения orderIds
+        return userMapper.toUserOutputDTO(true, user);
     }
 
     @Override
     public List<UserOutputDTO> getAllUsers() throws SQLException {
         List<User> users = userDao.getAllUsers();
         return users.stream()
-                .map(user -> userMapper.toUserOutputDTO(true, user)) // Указываем true для включения orderIds
+                .map(user -> userMapper.toUserOutputDTO(true, user))
                 .collect(Collectors.toList());
     }
 
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     public List<UserOutputDTO> getUsersWithPagination(int pageNumber, int pageSize) throws SQLException {
         List<User> users = userDao.getUserWithPagination(pageNumber, pageSize);
         return users.stream()
-                .map(user -> userMapper.toUserOutputDTO(true, user)) // Указываем true для включения orderIds
+                .map(user -> userMapper.toUserOutputDTO(true, user))
                 .collect(Collectors.toList());
     }
 
