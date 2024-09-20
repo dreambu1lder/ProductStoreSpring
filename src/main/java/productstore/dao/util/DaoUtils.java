@@ -6,6 +6,8 @@ import java.sql.*;
 
 public class DaoUtils {
 
+    private DaoUtils() {}
+
     public static <T> T executeInsert(String sql, PreparedStatementSetter setter, GeneratedKeyHandler<T> handler) throws SQLException {
         try(Connection connection = DataBaseUtil.getConnection();
             PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {

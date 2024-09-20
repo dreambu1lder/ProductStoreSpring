@@ -9,11 +9,11 @@ import java.sql.SQLException;
 public class DataBaseUtil {
     private static HikariDataSource dataSource;
 
+    private DataBaseUtil() {}
+
     public static void initializeDataSource(String jdbcUrl, String username, String password) {
         if (dataSource == null) {
             try {
-                System.out.println("Initializing DataSource with URL: " + jdbcUrl);
-                System.out.println("Username: " + username);
                 HikariConfig config = new HikariConfig();
                 config.setJdbcUrl(jdbcUrl);
                 config.setUsername(username);
@@ -26,7 +26,6 @@ public class DataBaseUtil {
                 config.setConnectionTestQuery("SELECT 1");
                 dataSource = new HikariDataSource(config);
             } catch (Exception e) {
-                e.printStackTrace();
                 throw new ExceptionInInitializerError("Ошибка инициализации пула соединений: " + e.getMessage());
             }
         }
@@ -38,7 +37,6 @@ public class DataBaseUtil {
                 HikariConfig config = new HikariConfig("/db.properties");
                 dataSource = new HikariDataSource(config);
             } catch (Exception e) {
-                e.printStackTrace();
                 throw new ExceptionInInitializerError("Ошибка инициализации пула соединений для основной базы данных: " + e.getMessage());
             }
         }
