@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 @WebServlet("/api/users/*")
 public class UserServlet extends HttpServlet {
 
+    private static final String INVALID_USER_ID_FORMAT = "Invalid user ID format";
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+
     private final transient UserService userService;
     private final transient Gson gson = new Gson();
 
@@ -61,9 +64,9 @@ public class UserServlet extends HttpServlet {
         } catch (UserNotFoundException e) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (NumberFormatException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format");
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_USER_ID_FORMAT);
         } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -82,7 +85,7 @@ public class UserServlet extends HttpServlet {
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
         } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -99,7 +102,7 @@ public class UserServlet extends HttpServlet {
         try {
             userId = Long.parseLong(pathInfo.substring(1));
         } catch (NumberFormatException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format.");
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_USER_ID_FORMAT);
             return;
         }
 
@@ -144,9 +147,9 @@ public class UserServlet extends HttpServlet {
         } catch (UserNotFoundException e) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (NumberFormatException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format");
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_USER_ID_FORMAT);
         } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -154,7 +157,7 @@ public class UserServlet extends HttpServlet {
         try {
             return Long.parseLong(id);
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("Invalid user ID format");
+            throw new NumberFormatException(INVALID_USER_ID_FORMAT);
         }
     }
 
