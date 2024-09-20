@@ -7,6 +7,7 @@ import productstore.model.Product;
 import productstore.service.OrderService;
 import productstore.service.apierror.OrderNotFoundException;
 import productstore.service.apierror.ProductNotFoundException;
+import productstore.service.apierror.ProductServiceException;
 import productstore.servlet.dto.input.OrderInputDTO;
 import productstore.servlet.dto.output.OrderOutputDTO;
 import productstore.servlet.dto.output.ProductOutputDTO;
@@ -154,7 +155,7 @@ public class OrderServiceImpl implements OrderService {
             }
             return product;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new ProductServiceException("Failed to retrieve product with ID " + productId, e);
         }
     }
 }
