@@ -15,8 +15,9 @@ import java.util.stream.Collectors;
 public interface ProductMapper {
     ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "orders", ignore = true)
+    
+    @Mapping(target = "id", source = "id") 
+    @Mapping(target = "orders", ignore = true) 
     Product toProduct(ProductInputDTO productInputDTO);
 
     @Mapping(target = "orderIds", expression = "java(includeOrderIds ? ordersToOrderIds(product.getOrders()) : null)")

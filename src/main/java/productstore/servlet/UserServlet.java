@@ -14,17 +14,34 @@ import productstore.service.apierror.UserNotFoundException;
 import productstore.service.impl.UserServiceImpl;
 import productstore.servlet.dto.input.UserInputDTO;
 import productstore.servlet.dto.output.UserOutputDTO;
+import productstore.servlet.mapper.UserMapper;
 import productstore.servlet.util.PaginationUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @WebServlet("/api/users/*")
 public class UserServlet extends HttpServlet {
 
-    private final UserService userService = new UserServiceImpl(new UserDaoImpl());
+    private final UserService userService;
     private final Gson gson = new Gson();
+
+    
+    public UserServlet() {
+        
+        UserMapper userMapper = UserMapper.INSTANCE;
+
+        
+        this.userService = new UserServiceImpl(new UserDaoImpl(), userMapper);
+    }
+
+    
+    public UserServlet(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -32,10 +49,8 @@ public class UserServlet extends HttpServlet {
 
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-
                 int pageNumber = PaginationUtils.getPageNumber(req);
                 int pageSize = PaginationUtils.getPageSize(req);
-
                 List<UserOutputDTO> users = userService.getUsersWithPagination(pageNumber, pageSize);
                 writeResponse(resp, HttpServletResponse.SC_OK, users);
             } else {
@@ -55,12 +70,13 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            if (!req.getReader().ready()) {
+            String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            if (requestBody.isEmpty()) {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is required");
                 return;
             }
 
-            UserInputDTO userInputDTO = gson.fromJson(req.getReader(), UserInputDTO.class);
+            UserInputDTO userInputDTO = gson.fromJson(requestBody, UserInputDTO.class);
             UserOutputDTO createdUser = userService.createUser(userInputDTO);
             writeResponse(resp, HttpServletResponse.SC_CREATED, createdUser);
         } catch (JsonSyntaxException e) {
@@ -72,21 +88,43 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
+
+        if (pathInfo == null || pathInfo.length() < 2) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "User ID is required.");
+            return;
+        }
+
+        long userId;
         try {
-            if (!req.getReader().ready()) {
+            userId = Long.parseLong(pathInfo.substring(1)); 
+        } catch (NumberFormatException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format.");
+            return;
+        }
+
+        String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
+        UserInputDTO userInputDTO;
+        try {
+            if (requestBody.isEmpty()) {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is required");
                 return;
             }
+            userInputDTO = gson.fromJson(requestBody, UserInputDTO.class);
+            userInputDTO.setId(userId); 
+        } catch (JsonSyntaxException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
+            return;
+        }
 
-            UserInputDTO userInputDTO = gson.fromJson(req.getReader(), UserInputDTO.class);
+        try {
             userService.updateUser(userInputDTO);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (UserNotFoundException e) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-        } catch (JsonSyntaxException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
-        } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+        } catch (SQLException e) {
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         }
     }
 

@@ -16,7 +16,7 @@ public interface OrderMapper {
     OrderOutputDTO toOrderOutputDTO(@Context boolean includeOrderIds, Order order);
 
     @Mapping(target = "user.id", source = "userId")
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "id") 
     @Mapping(target = "products", ignore = true)
     Order toOrder(OrderInputDTO orderInputDTO);
 }

@@ -3,8 +3,17 @@ package productstore.servlet.dto.input;
 import java.util.List;
 
 public class OrderInputDTO {
+    private Long id; 
     private long userId;
     private List<Long> productIds;
+
+    public Long getId() {
+        return id; 
+    }
+
+    public void setId(Long id) {
+        this.id = id; 
+    }
 
     public long getUserId() {
         return userId;
@@ -25,8 +34,10 @@ public class OrderInputDTO {
     @Override
     public String toString() {
         return "OrderInputDTO{" +
-                "userId=" + userId +
+                "id=" + id +
+                ", userId=" + userId +
                 ", productIds=" + productIds +
                 '}';
     }
 }
+

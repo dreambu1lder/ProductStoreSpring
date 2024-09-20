@@ -15,6 +15,7 @@ import productstore.service.apierror.ProductNotFoundException;
 import productstore.service.impl.ProductServiceImpl;
 import productstore.servlet.dto.input.ProductInputDTO;
 import productstore.servlet.dto.output.ProductOutputDTO;
+import productstore.servlet.mapper.ProductMapper;
 import productstore.servlet.util.PaginationUtils;
 
 import java.io.IOException;
@@ -24,12 +25,16 @@ import java.util.stream.Collectors;
 @WebServlet("/api/products/*")
 public class ProductServlet extends HttpServlet {
 
-    private final ProductService productService = new ProductServiceImpl(new ProductDaoImpl());
+    private final ProductService productService;
     private final Gson gson = new GsonBuilder().serializeNulls().create();
 
-    @Override
-    public void init() throws ServletException {
-        System.out.println("ProductServlet initialized");
+    public ProductServlet() {
+        ProductMapper productMapper = ProductMapper.INSTANCE;
+        this.productService = new ProductServiceImpl(new ProductDaoImpl(), productMapper);
+    }
+
+    public ProductServlet(ProductService productService) {
+        this.productService = productService;
     }
 
     @Override
@@ -40,7 +45,6 @@ public class ProductServlet extends HttpServlet {
             if (pathInfo == null || pathInfo.equals("/")) {
                 int pageNumber = PaginationUtils.getPageNumber(req);
                 int pageSize = PaginationUtils.getPageSize(req);
-
                 List<ProductOutputDTO> products = productService.getProductsWithPagination(pageNumber, pageSize);
                 writeResponse(resp, HttpServletResponse.SC_OK, products);
             } else if (pathInfo.matches("/\\d+/orders")) {
@@ -67,30 +71,58 @@ public class ProductServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            if (requestBody.isEmpty()) {
+                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
+                return;
+            }
+
             ProductInputDTO productInputDTO = gson.fromJson(requestBody, ProductInputDTO.class);
+
+            if (productInputDTO.getName() == null || productInputDTO.getPrice() == null || productInputDTO.getPrice() <= 0) {
+                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing required fields: name and price");
+                return;
+            }
 
             ProductOutputDTO createdProduct = productService.createProduct(productInputDTO);
             writeResponse(resp, HttpServletResponse.SC_CREATED, createdProduct);
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
             handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
         }
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.length() < 2) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Product ID is required.");
+            return;
+        }
+
+        long productId;
+        try {
+            productId = Long.parseLong(pathInfo.substring(1));
+        } catch (NumberFormatException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid product ID format.");
+            return;
+        }
+
         try {
             String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-            ProductInputDTO productInputDTO = gson.fromJson(requestBody, ProductInputDTO.class);
+            if (requestBody.isEmpty()) {
+                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
+                return;
+            }
 
+            ProductInputDTO productInputDTO = gson.fromJson(requestBody, ProductInputDTO.class);
+            productInputDTO.setId(productId);
             productService.updateProduct(productInputDTO);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        } catch (ProductNotFoundException e) {
-            handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
+        } catch (ProductNotFoundException e) {
+            handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (Exception e) {
             handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
         }
@@ -131,14 +163,9 @@ public class ProductServlet extends HttpServlet {
     }
 
     private void writeResponse(HttpServletResponse resp, int statusCode, Object data) throws IOException {
-        try {
-            resp.setContentType("application/json");
-            resp.setStatus(statusCode);
-            String jsonResponse = gson.toJson(data);
-            resp.getWriter().write(jsonResponse);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        resp.setContentType("application/json");
+        resp.setStatus(statusCode);
+        String jsonResponse = gson.toJson(data);
+        resp.getWriter().write(jsonResponse);
     }
 }

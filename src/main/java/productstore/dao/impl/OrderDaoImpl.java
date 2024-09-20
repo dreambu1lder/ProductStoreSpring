@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class OrderDaoImpl implements OrderDao {
 
@@ -22,8 +21,8 @@ public class OrderDaoImpl implements OrderDao {
     public Order saveOrder(Order order) throws SQLException {
         try (Connection connection = DataBaseUtil.getConnection()) {
             return DaoUtils.executeInTransaction(connection, () -> {
-                String insertOrderSql = SqlQueries.INSERT_INTO.getSql().formatted("orders", "user_id", "?");
-                String insertOrderProductsSql = SqlQueries.INSERT_INTO.getSql().formatted("orders_products", "order_id, product_id", "?, ?");
+                String insertOrderSql = SqlQueries.INSERT_ORDER.getSql();
+                String insertOrderProductsSql = SqlQueries.INSERT_ORDER_PRODUCTS.getSql();
 
                 try (PreparedStatement insertOrderStmt = connection.prepareStatement(insertOrderSql, Statement.RETURN_GENERATED_KEYS);
                      PreparedStatement insertOrderProductsStmt = connection.prepareStatement(insertOrderProductsSql)) {
@@ -40,11 +39,6 @@ public class OrderDaoImpl implements OrderDao {
                                 insertOrderProductsStmt.setLong(1, generatedOrderId);
                                 insertOrderProductsStmt.setLong(2, product.getId());
                                 insertOrderProductsStmt.addBatch();
-
-                                if (product.getOrders() == null) {
-                                    product.setOrders(new ArrayList<>());
-                                }
-                                product.getOrders().add(order);
                             }
                             insertOrderProductsStmt.executeBatch();
                         } else {
@@ -61,14 +55,7 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public List<Order> getOrdersWithPagination(int pageNumber, int pageSize) throws SQLException {
-        String sql = "SELECT o.id AS order_id, o.user_id, u.id AS user_id, u.name AS user_name, u.email AS user_email, " +
-                "p.id AS product_id, p.name AS product_name, p.price AS product_price " +
-                "FROM orders o " +
-                "JOIN users u ON o.user_id = u.id " +
-                "LEFT JOIN orders_products op ON o.id = op.order_id " +
-                "LEFT JOIN products p ON op.product_id = p.id " +
-                "ORDER BY o.id " +
-                "LIMIT ? OFFSET ?";
+        String sql = SqlQueries.SELECT_ORDERS_WITH_PAGINATION.getSql();
 
         return getOrders(sql, stmt -> {
             stmt.setInt(1, pageSize);
@@ -78,43 +65,54 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public Order getOrderById(long id) throws SQLException {
-        String sql = "SELECT o.id AS order_id, o.user_id, u.id AS user_id, u.name AS user_name, u.email AS user_email, " +
-                "p.id AS product_id, p.name AS product_name, p.price AS product_price " +
-                "FROM orders o " +
-                "JOIN users u ON o.user_id = u.id " +
-                "LEFT JOIN orders_products op ON o.id = op.order_id " +
-                "LEFT JOIN products p ON op.product_id = p.id " +
-                "WHERE o.id = ?";
+        String sql = SqlQueries.SELECT_ORDER_BY_ID.getSql();
+
         List<Order> orders = getOrders(sql, stmt -> stmt.setLong(1, id));
-        return orders.isEmpty() ? null : orders.get(0);
+        if (orders.isEmpty()) {
+            return null;
+        }
+
+        Order order = orders.get(0);
+        return order;
     }
 
     @Override
     public List<Order> getAllOrders() throws SQLException {
-        String sql = "SELECT o.id AS order_id, o.user_id, u.id AS user_id, u.name AS user_name, u.email AS user_email, " +
-                "p.id AS product_id, p.name AS product_name, p.price AS product_price " +
-                "FROM orders o " +
-                "JOIN users u ON o.user_id = u.id " +
-                "LEFT JOIN orders_products op ON o.id = op.order_id " +
-                "LEFT JOIN products p ON op.product_id = p.id";
+        String sql = SqlQueries.SELECT_ALL_FROM.getSql().formatted(
+                "o.id AS order_id, o.user_id, u.id AS user_id, u.name AS user_name, u.email AS user_email, " +
+                        "p.id AS product_id, p.name AS product_name, p.price AS product_price",
+                "orders o JOIN users u ON o.user_id = u.id LEFT JOIN orders_products op ON o.id = op.order_id LEFT JOIN products p ON op.product_id = p.id"
+        );
         return getOrders(sql, stmt -> {});
     }
 
     @Override
     public void updateOrder(Order order) throws SQLException {
-        String sql = SqlQueries.UPDATE_SET.getSql().formatted("orders", "user_id = ?", "id = ?");
-        DaoUtils.executeUpdate(sql, stmt -> {
-            stmt.setLong(1, order.getUser().getId());
-            stmt.setLong(2, order.getId());
-        });
+        try (Connection connection = DataBaseUtil.getConnection()) {
+            DaoUtils.executeInTransaction(connection, () -> {
+                String sql = SqlQueries.UPDATE_SET.getSql().formatted("orders", "user_id = ?", "id = ?");
+                try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                    stmt.setLong(1, order.getUser().getId());
+                    stmt.setLong(2, order.getId());
+                    stmt.executeUpdate();
+                }
 
-        deleteProductsFromOrder(order.getId());
-        addProductsToOrder(order.getId(), order.getProducts());
+                deleteProductsFromOrder(order.getId(), connection);
+
+                addProductsToOrder(order.getId(), order.getProducts(), connection);
+
+                Order updatedOrder = getOrderById(order.getId());
+
+                return null;
+            });
+        } catch (SQLException e) {
+            throw e;
+        }
     }
 
     @Override
     public void deleteOrder(long id) throws SQLException {
-        String sql = SqlQueries.DELETE_FROM.getSql().formatted("orders", "id = ?");
+        String sql = SqlQueries.DELETE_ORDER.getSql();
         DaoUtils.executeUpdate(sql, stmt -> {
             stmt.setLong(1, id);
         });
@@ -132,10 +130,7 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public List<Product> getProductsByOrderId(long orderId) throws SQLException {
-        String sql = "SELECT p.id, p.name, p.price " +
-                "FROM products p " +
-                "JOIN orders_products op ON p.id = op.product_id " +
-                "WHERE op.order_id = ?";
+        String sql = SqlQueries.SELECT_PRODUCTS_BY_ORDER_ID.getSql();
 
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setLong(1, orderId);
@@ -179,51 +174,65 @@ public class OrderDaoImpl implements OrderDao {
 
     private List<Order> getOrders(String sql, PreparedStatementSetter setter) throws SQLException {
         return DaoUtils.executeQuery(sql, setter, rs -> {
-            Map<Long, Order.Builder> orderMap = new HashMap<>();
+            Map<Long, Order> orderMap = new HashMap<>();
             while (rs.next()) {
                 long orderId = rs.getLong("order_id");
-                Order.Builder orderBuilder = orderMap.get(orderId);
 
-                if (orderBuilder == null) {
-                    orderBuilder = mapResultSetToOrder(rs).toBuilder();
-                    orderMap.put(orderId, orderBuilder);
-                }
+                Order order = orderMap.computeIfAbsent(orderId, k -> {
+                    try {
+                        return mapResultSetToOrder(rs);
+                    } catch (SQLException e) {
+                        return null;
+                    }
+                });
 
                 Product product = mapResultSetToProduct(rs);
                 if (product != null) {
-                    orderBuilder.getProducts().add(product);
-                    product.getOrders().add(orderBuilder.build());
+                    if (order != null && order.getProducts() != null) {
+                        order.getProducts().add(product);
+                    }
                 }
             }
 
-            return orderMap.values().stream()
-                    .map(Order.Builder::build)
-                    .collect(Collectors.toList());
+            List<Order> orders = new ArrayList<>(orderMap.values());
+
+            return orders;
         });
     }
 
     private void addProductsToOrder(long orderId, List<Product> products, Connection connection) throws SQLException {
-        String insertOrderProductsSql = SqlQueries.INSERT_INTO.getSql().formatted("orders_products", "order_id, product_id", "?, ?");
+        String insertOrderProductsSql = SqlQueries.INSERT_ORDER_PRODUCTS.getSql();
+        String checkProductExistsSql = "SELECT 1 FROM orders_products WHERE order_id = ? AND product_id = ?";
 
-        try (PreparedStatement insertOrderProductsStmt = connection.prepareStatement(insertOrderProductsSql)) {
+        try (PreparedStatement insertOrderProductsStmt = connection.prepareStatement(insertOrderProductsSql);
+             PreparedStatement checkProductExistsStmt = connection.prepareStatement(checkProductExistsSql)) {
+
             for (Product product : products) {
+                checkProductExistsStmt.setLong(1, orderId);
+                checkProductExistsStmt.setLong(2, product.getId());
+                try (ResultSet rs = checkProductExistsStmt.executeQuery()) {
+                    if (rs.next()) {
+                        continue;
+                    }
+                }
+
                 insertOrderProductsStmt.setLong(1, orderId);
                 insertOrderProductsStmt.setLong(2, product.getId());
                 insertOrderProductsStmt.addBatch();
-
-                if (product.getOrders() == null) {
-                    product.setOrders(new ArrayList<>());
-                }
-                product.getOrders().add(new Order.Builder().withId(orderId).build());
             }
             insertOrderProductsStmt.executeBatch();
+        } catch (SQLException e) {
+            throw e;
         }
     }
 
-    private void deleteProductsFromOrder(long orderId) throws SQLException {
-        String deleteOrderProductsSql = SqlQueries.DELETE_FROM.getSql().formatted("orders_products", "order_id = ?");
-        DaoUtils.executeUpdate(deleteOrderProductsSql, stmt -> {
-            stmt.setLong(1, orderId);
-        });
+    private void deleteProductsFromOrder(long orderId, Connection connection) throws SQLException {
+        String deleteOrderProductsSql = SqlQueries.DELETE_ORDER_PRODUCTS.getSql();
+        try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOrderProductsSql)) {
+            deleteStmt.setLong(1, orderId);
+            deleteStmt.executeUpdate();
+        } catch (SQLException e) {
+            throw e;
+        }
     }
 }

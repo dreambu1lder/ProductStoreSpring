@@ -3,6 +3,7 @@ package productstore.dao;
 import productstore.model.Order;
 import productstore.model.Product;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 

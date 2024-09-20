@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
 public interface UserMapper {
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    @Mapping(target = "id", ignore = true)
+    
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "orders", ignore = true)
     User toUser(UserInputDTO userInputDTO);
 

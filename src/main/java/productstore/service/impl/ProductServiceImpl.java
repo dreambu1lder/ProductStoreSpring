@@ -14,10 +14,11 @@ import java.util.stream.Collectors;
 
 public class ProductServiceImpl implements ProductService {
     private final ProductDao productDao;
-    private final ProductMapper productMapper = ProductMapper.INSTANCE;
+    private final ProductMapper productMapper;
 
-    public ProductServiceImpl(ProductDao productDao) {
+    public ProductServiceImpl(ProductDao productDao, ProductMapper productMapper) {
         this.productDao = productDao;
+        this.productMapper = productMapper;
     }
 
     @Override

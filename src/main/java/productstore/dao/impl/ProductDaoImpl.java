@@ -9,28 +9,26 @@ import productstore.model.Product;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ProductDaoImpl implements ProductDao {
 
     @Override
     public Product saveProduct(Product product) throws SQLException {
-        return DaoUtils.executeInsert(SqlQueries.INSERT_INTO.getSql().formatted("products", "name, price", "?, ?"), stmt -> {
+        if (product.getPrice() < 0) {
+            throw new SQLException("Цена продукта не может быть отрицательной.");
+        }
+        String sql = SqlQueries.INSERT_PRODUCT.getSql();
+        return DaoUtils.executeInsert(sql, stmt -> {
             stmt.setString(1, product.getName());
             stmt.setDouble(2, product.getPrice());
         }, generatedKeys -> {
             if (generatedKeys.next()) {
                 product.setId(generatedKeys.getLong(1));
 
-                if (product.getOrders() != null) {
-                    for (Order order : product.getOrders()) {
-                        if (order.getProducts() == null) {
-                            order.setProducts(new ArrayList<>());
-                        }
-                        order.getProducts().add(product);
-                    }
-                }
-
+                
+                populateProductOrders(Collections.singletonList(product));
                 return product;
             } else {
                 throw new SQLException("Не удалось сгенерировать айди для сущности product.");
@@ -40,26 +38,20 @@ public class ProductDaoImpl implements ProductDao {
 
     @Override
     public List<Product> getProductWithPagination(int pageNumber, int pageSize) throws SQLException {
-        String sql = SqlQueries.SELECT_WITH_PAGINATION.getSql().formatted("*", "products", "id", "?", "?");
+        String sql = SqlQueries.SELECT_PRODUCT_WITH_PAGINATION.getSql();
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setInt(1, pageSize);
             stmt.setInt(2, (pageNumber - 1) * pageSize);
         }, rs -> {
             List<Product> products = mapResultSetToProducts(rs);
-            for (Product product : products) {
-                List<Order> orders = getOrdersByProductId(product.getId());
-                product.setOrders(orders);
-                for (Order order : orders) {
-                    order.getProducts().add(product);
-                }
-            }
+            populateProductOrders(products);
             return products;
         });
     }
 
     @Override
     public void deleteProduct(long id) throws SQLException {
-        String sql = SqlQueries.DELETE_FROM.getSql().formatted("products", "id = ?");
+        String sql = SqlQueries.DELETE_PRODUCT.getSql();
         DaoUtils.executeUpdate(sql, stmt -> {
             stmt.setLong(1, id);
         });
@@ -79,17 +71,13 @@ public class ProductDaoImpl implements ProductDao {
 
     @Override
     public Product getProductById(long id) throws SQLException {
-        String sql = SqlQueries.SELECT_FROM.getSql().formatted("*", "products", "id = ?");
+        String sql = SqlQueries.SELECT_PRODUCT_BY_ID.getSql();
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setLong(1, id);
         }, rs -> {
             if (rs.next()) {
                 Product product = mapResultSetToProduct(rs);
-                List<Order> orders = getOrdersByProductId(product.getId());
-                product.setOrders(orders);
-                for (Order order : orders) {
-                    order.getProducts().add(product);
-                }
+                populateProductOrders(Collections.singletonList(product));
                 return product;
             }
             return null;
@@ -102,15 +90,7 @@ public class ProductDaoImpl implements ProductDao {
         System.out.println("Executing SQL: " + sql);
         List<Product> products = DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToProducts);
 
-        for (Product product : products) {
-            List<Order> orders = getOrdersByProductId(product.getId());
-            product.setOrders(orders);
-            for (Order order : orders) {
-                order.getProducts().add(product);
-            }
-        }
-
-        System.out.println("Products from DB: " + products);
+        populateProductOrders(products);
         return products;
     }
 
@@ -159,22 +139,30 @@ public class ProductDaoImpl implements ProductDao {
                 .withId(rs.getLong("id"))
                 .withName(rs.getString("name"))
                 .withPrice(rs.getDouble("price"))
-                .withOrders(new ArrayList<>())
+                .withOrders(new ArrayList<>()) 
                 .build();
     }
 
     private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
         return new Order.Builder()
                 .withId(rs.getLong("order_id"))
-                .withProducts(new ArrayList<>())
+                .withProducts(new ArrayList<>()) 
                 .build();
     }
 
+    
+    private void populateProductOrders(List<Product> products) throws SQLException {
+        for (Product product : products) {
+            List<Order> orders = getOrdersByProductId(product.getId());
+            product.setOrders(orders); 
+            for (Order order : orders) {
+                order.getProducts().add(product); 
+            }
+        }
+    }
+
     private List<Order> getOrdersByProductId(long productId) throws SQLException {
-        String sql = "SELECT o.id AS order_id " +
-                "FROM orders o " +
-                "JOIN orders_products op ON o.id = op.order_id " +
-                "WHERE op.product_id = ?";
+        String sql = SqlQueries.SELECT_ORDERS_BY_PRODUCT_ID.getSql();
         return DaoUtils.executeQuery(sql, stmt -> {
             stmt.setLong(1, productId);
         }, rs -> {
@@ -187,13 +175,11 @@ public class ProductDaoImpl implements ProductDao {
     }
 
     private void updateOrdersForProduct(Product product) throws SQLException {
-        // Удаляем все связи с заказами
-        String deleteSql = SqlQueries.DELETE_FROM.getSql().formatted("orders_products", "product_id = ?");
+        String deleteSql = SqlQueries.DELETE_PRODUCT_FROM_ORDER_PRODUCTS.getSql();
         DaoUtils.executeUpdate(deleteSql, stmt -> {
             stmt.setLong(1, product.getId());
         });
 
-        // Добавляем новые связи
         if (product.getOrders() != null && !product.getOrders().isEmpty()) {
             String insertSql = SqlQueries.INSERT_INTO.getSql().formatted("orders_products", "order_id, product_id", "?, ?");
             try (Connection connection = DataBaseUtil.getConnection();
@@ -202,7 +188,7 @@ public class ProductDaoImpl implements ProductDao {
                     insertStmt.setLong(1, order.getId());
                     insertStmt.setLong(2, product.getId());
                     insertStmt.addBatch();
-                    // Устанавливаем двустороннюю связь
+
                     order.getProducts().add(product);
                 }
                 insertStmt.executeBatch();

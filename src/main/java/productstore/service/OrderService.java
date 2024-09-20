@@ -14,4 +14,6 @@ public interface OrderService {
     void addProductsToOrder(long orderId, List<Long> productIds) throws SQLException;
     List<ProductOutputDTO> getProductsByOrderId(long orderId) throws SQLException;
     List<OrderOutputDTO> getOrdersWithPagination(int pageNumber, int pageSize) throws SQLException;
+    void updateOrder(OrderInputDTO orderInputDTO) throws SQLException;
+    void deleteOrder(long id) throws SQLException;
 }

@@ -13,11 +13,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class UserServiceImpl implements UserService {
-    private final UserDao userDao;
-    private final UserMapper userMapper = UserMapper.INSTANCE;
 
-    public UserServiceImpl(UserDao userDao) {
+    private final UserDao userDao;
+    private final UserMapper userMapper;
+
+    public UserServiceImpl(UserDao userDao, UserMapper userMapper) {
         this.userDao = userDao;
+        this.userMapper = userMapper;
     }
 
     @Override

@@ -21,12 +21,14 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
     private final OrderDao orderDao;
     private final ProductDao productDao;
-    private final OrderMapper orderMapper = OrderMapper.INSTANCE;
-    private final ProductMapper productMapper = ProductMapper.INSTANCE;
+    private final OrderMapper orderMapper;
+    private final ProductMapper productMapper;
 
-    public OrderServiceImpl(OrderDao orderDao, ProductDao productDao) {
+    public OrderServiceImpl(OrderDao orderDao, ProductDao productDao, OrderMapper orderMapper, ProductMapper productMapper) {
         this.orderDao = orderDao;
         this.productDao = productDao;
+        this.orderMapper = orderMapper;
+        this.productMapper = productMapper;
     }
 
     @Override
@@ -84,6 +86,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public void updateOrder(OrderInputDTO orderInputDTO) throws SQLException {
+        if (orderInputDTO.getId() == null) {
+            throw new IllegalArgumentException("Order ID cannot be null.");
+        }
+
+        Order existingOrder = orderDao.getOrderById(orderInputDTO.getId());
+        if (existingOrder == null) {
+            throw new OrderNotFoundException("Order with ID " + orderInputDTO.getId() + " not found.");
+        }
+
+        Order order = orderMapper.toOrder(orderInputDTO);
+        order.setProducts(existingOrder.getProducts()); 
+
+        orderDao.updateOrder(order);
+    }
+
+    @Override
     public List<OrderOutputDTO> getAllOrders() throws SQLException {
         List<Order> orders = orderDao.getAllOrders();
         return orders.stream()
@@ -134,5 +153,14 @@ public class OrderServiceImpl implements OrderService {
         return order.getProducts().stream()
                 .map(product -> productMapper.toProductOutputDTO(false, product))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteOrder(long id) throws SQLException {
+        Order order = orderDao.getOrderById(id);
+        if (order == null) {
+            throw new OrderNotFoundException("Order with ID " + id + " not found.");
+        }
+        orderDao.deleteOrder(id);
     }
 }

@@ -7,7 +7,7 @@ public class Order {
 
     private long id;
     private User user;
-    private List<Product> products;
+    private List<Product> products = new ArrayList<>();
 
     public Order() {}
 
@@ -26,7 +26,10 @@ public class Order {
     }
 
     public List<Product> getProducts() {
-        return products;
+        if (this.products == null) {
+            this.products = new ArrayList<>();
+        }
+        return this.products; 
     }
 
     public void setId(long id) {
@@ -38,7 +41,11 @@ public class Order {
     }
 
     public void setProducts(List<Product> products) {
-        this.products = products;
+        if (products != null) {
+            this.products = new ArrayList<>(products); 
+        } else {
+            this.products = new ArrayList<>();
+        }
     }
 
     public Builder toBuilder() {
@@ -59,7 +66,7 @@ public class Order {
     public static class Builder {
         private long id;
         private User user;
-        private List<Product> products;
+        private List<Product> products = new ArrayList<>();
 
         public Builder withId(long id) {
             this.id = id;
@@ -72,20 +79,20 @@ public class Order {
         }
 
         public Builder withProducts(List<Product> products) {
-            this.products = products;
+            if (products != null) {
+                this.products = new ArrayList<>(products); 
+            } else {
+                this.products = new ArrayList<>();
+            }
             return this;
         }
 
-        // Добавляем геттер для списка продуктов
-        public List<Product> getProducts() {
+        public Order build() {
             if (this.products == null) {
                 this.products = new ArrayList<>();
             }
-            return this.products;
-        }
-
-        public Order build() {
             return new Order(this);
         }
     }
 }
+
