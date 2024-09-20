@@ -37,11 +37,9 @@ public class OrderServlet extends HttpServlet {
     private final transient OrderService orderService;
     private final transient Gson gson = new Gson();
 
-
     public OrderServlet() {
         this(new OrderServiceImpl(new OrderDaoImpl(), new ProductDaoImpl(), OrderMapper.INSTANCE, ProductMapper.INSTANCE));
     }
-
 
     public OrderServlet(OrderService orderService) {
         this.orderService = orderService;
@@ -50,14 +48,15 @@ public class OrderServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
+
         try {
-            if (pathInfo == null || pathInfo.equals("/")) {
+            if (isRootPath(pathInfo)) {
                 handleGetAllOrders(resp, req);
-            } else if (pathInfo.matches("/\\d+/products")) {
+            } else if (isProductsPath(pathInfo)) {
                 handleGetProductsByOrderId(resp, pathInfo);
-            } else if (pathInfo.matches("/\\d+/users")) {
+            } else if (isUsersPath(pathInfo)) {
                 handleGetUserByOrderId(resp, pathInfo);
-            } else if (pathInfo.matches("/\\d+")) {
+            } else if (isOrderIdPath(pathInfo)) {
                 handleGetOrderById(resp, pathInfo);
             } else {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request path");
@@ -67,47 +66,6 @@ public class OrderServlet extends HttpServlet {
         } catch (Exception e) {
             handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private void handleGetUserByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
-        long orderId = Long.parseLong(pathInfo.split("/")[1]);
-
-        OrderOutputDTO order = orderService.getOrderById(orderId);
-        if (order == null) {
-            handleException(resp, HttpServletResponse.SC_NOT_FOUND, "Order with ID " + orderId + " not found.");
-            return;
-        }
-
-        UserOutputDTO user = order.getUser();
-        writeResponse(resp, HttpServletResponse.SC_OK, user);
-    }
-
-    private void handleGetAllOrders(HttpServletResponse resp, HttpServletRequest req) throws IOException, SQLException {
-        try {
-            int pageNumber = PaginationUtils.getPageNumber(req);
-            int pageSize = PaginationUtils.getPageSize(req);
-
-            List<OrderOutputDTO> orders = orderService.getOrdersWithPagination(pageNumber, pageSize);
-            writeResponse(resp, HttpServletResponse.SC_OK, orders);
-        } catch (NumberFormatException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid pagination parameters");
-        }
-    }
-
-    private void handleGetProductsByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
-        long id = Long.parseLong(pathInfo.split("/")[1]);
-        List<ProductOutputDTO> products = orderService.getProductsByOrderId(id);
-        writeResponse(resp, HttpServletResponse.SC_OK, products);
-    }
-
-    private void handleGetOrderById(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
-        long id = Long.parseLong(pathInfo.split("/")[1]);
-        OrderOutputDTO order = orderService.getOrderById(id);
-        if (order == null) {
-            handleException(resp, HttpServletResponse.SC_NOT_FOUND, "Order not found");
-            return;
-        }
-        writeResponse(resp, HttpServletResponse.SC_OK, order);
     }
 
     @Override
@@ -135,83 +93,19 @@ public class OrderServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
 
-
-        if (pathInfo == null || pathInfo.length() < 2) {
+        if (isInvalidPath(pathInfo)) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Order ID is required.");
             return;
         }
 
-
-        if (pathInfo.matches("/\\d+/products")) {
-            long orderId;
-            try {
-                orderId = Long.parseLong(pathInfo.split("/")[1]);
-            } catch (NumberFormatException e) {
-                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format.");
-                return;
-            }
-
-
-            String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-            ProductIdsRequest productIdsRequest;
-            try {
-                productIdsRequest = gson.fromJson(requestBody, ProductIdsRequest.class);
-                if (productIdsRequest == null || productIdsRequest.getProductIds() == null || productIdsRequest.getProductIds().isEmpty()) {
-                    handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Product IDs are required.");
-                    return;
-                }
-            } catch (JsonSyntaxException e) {
-                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
-                return;
-            }
-
-            try {
-
-                orderService.addProductsToOrder(orderId, productIdsRequest.getProductIds());
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } catch (OrderNotFoundException | ProductNotFoundException e) {
-                handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            } catch (RuntimeException e) {
-                handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error");
-            } catch (SQLException e) {
-                handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR + e.getMessage());
-            }
-            return;
-        }
-
-
-        long orderId;
         try {
-            orderId = Long.parseLong(pathInfo.substring(1));
-        } catch (NumberFormatException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format.");
-            return;
-        }
-
-        String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-
-        OrderInputDTO orderInputDTO;
-        try {
-            orderInputDTO = gson.fromJson(requestBody, OrderInputDTO.class);
-            if (orderInputDTO == null) {
-                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
-                return;
+            if (isProductsPath(pathInfo)) {
+                handleUpdateProducts(req, resp, pathInfo);
+            } else {
+                handleUpdateOrder(req, resp, pathInfo);
             }
-            orderInputDTO.setId(orderId);
-        } catch (JsonSyntaxException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
-            return;
-        }
-
-        try {
-            orderService.updateOrder(orderInputDTO);
-            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        } catch (OrderNotFoundException e) {
-            handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (RuntimeException e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error");
-        } catch (SQLException e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR + e.getMessage());
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error: " + e.getMessage());
         }
     }
 
@@ -220,12 +114,14 @@ public class OrderServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
 
         try {
-            if (pathInfo == null || pathInfo.equals("/")) {
+            if (isInvalidPath(pathInfo)) {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Order ID is required");
                 return;
             }
 
-            long id = parseId(pathInfo.substring(1));
+            long id = parseOrderId(pathInfo, resp);
+            if (id == -1) return;
+
             orderService.deleteOrder(id);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (OrderNotFoundException e) {
@@ -237,12 +133,144 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
-    private long parseId(String id) {
-        try {
-            return Long.parseLong(id);
-        } catch (NumberFormatException e) {
-            throw new NumberFormatException("Invalid order ID format");
+    private void handleGetUserByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
+        long orderId = parseOrderId(pathInfo, resp);
+        if (orderId == -1) return;
+
+        OrderOutputDTO order = orderService.getOrderById(orderId);
+        if (order == null) {
+            handleException(resp, HttpServletResponse.SC_NOT_FOUND, "Order with ID " + orderId + " not found.");
+            return;
         }
+
+        UserOutputDTO user = order.getUser();
+        writeResponse(resp, HttpServletResponse.SC_OK, user);
+    }
+
+    private void handleGetAllOrders(HttpServletResponse resp, HttpServletRequest req) throws IOException, SQLException {
+        try {
+            int pageNumber = PaginationUtils.getPageNumber(req);
+            int pageSize = PaginationUtils.getPageSize(req);
+
+            List<OrderOutputDTO> orders = orderService.getOrdersWithPagination(pageNumber, pageSize);
+            writeResponse(resp, HttpServletResponse.SC_OK, orders);
+        } catch (NumberFormatException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid pagination parameters");
+        }
+    }
+
+    private void handleGetProductsByOrderId(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
+        long id = parseOrderId(pathInfo, resp);
+        if (id == -1) return;
+
+        List<ProductOutputDTO> products = orderService.getProductsByOrderId(id);
+        writeResponse(resp, HttpServletResponse.SC_OK, products);
+    }
+
+    private void handleGetOrderById(HttpServletResponse resp, String pathInfo) throws IOException, SQLException {
+        long id = parseOrderId(pathInfo, resp);
+        if (id == -1) return;
+
+        OrderOutputDTO order = orderService.getOrderById(id);
+        if (order == null) {
+            handleException(resp, HttpServletResponse.SC_NOT_FOUND, "Order not found");
+            return;
+        }
+        writeResponse(resp, HttpServletResponse.SC_OK, order);
+    }
+
+    private void handleUpdateProducts(HttpServletRequest req, HttpServletResponse resp, String pathInfo) throws IOException {
+        long orderId = parseOrderId(pathInfo, resp);
+        if (orderId == -1) return;
+
+        ProductIdsRequest productIdsRequest = parseProductIdsRequest(req, resp);
+        if (productIdsRequest == null) return;
+
+        try {
+            orderService.addProductsToOrder(orderId, productIdsRequest.getProductIds());
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } catch (OrderNotFoundException | ProductNotFoundException e) {
+            handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        } catch (SQLException e) {
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR + e.getMessage());
+        }
+    }
+
+    private void handleUpdateOrder(HttpServletRequest req, HttpServletResponse resp, String pathInfo) throws IOException {
+        long orderId = parseOrderId(pathInfo, resp);
+        if (orderId == -1) return;
+
+        OrderInputDTO orderInputDTO = parseOrderInput(req, resp);
+        if (orderInputDTO == null) return;
+
+        try {
+            orderInputDTO.setId(orderId);
+            orderService.updateOrder(orderInputDTO);
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } catch (OrderNotFoundException e) {
+            handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        } catch (SQLException e) {
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR + e.getMessage());
+        }
+    }
+
+    private long parseOrderId(String pathInfo, HttpServletResponse resp) throws IOException {
+        try {
+            return Long.parseLong(pathInfo.split("/")[1]);
+        } catch (NumberFormatException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format.");
+            return -1;
+        }
+    }
+
+    private ProductIdsRequest parseProductIdsRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        try {
+            ProductIdsRequest productIdsRequest = gson.fromJson(requestBody, ProductIdsRequest.class);
+            if (productIdsRequest == null || productIdsRequest.getProductIds() == null || productIdsRequest.getProductIds().isEmpty()) {
+                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Product IDs are required.");
+                return null;
+            }
+            return productIdsRequest;
+        } catch (JsonSyntaxException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
+            return null;
+        }
+    }
+
+    private OrderInputDTO parseOrderInput(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        try {
+            OrderInputDTO orderInputDTO = gson.fromJson(requestBody, OrderInputDTO.class);
+            if (orderInputDTO == null) {
+                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
+                return null;
+            }
+            return orderInputDTO;
+        } catch (JsonSyntaxException e) {
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean isRootPath(String pathInfo) {
+        return pathInfo == null || pathInfo.equals("/");
+    }
+
+    private boolean isInvalidPath(String pathInfo) {
+        return pathInfo == null || pathInfo.length() < 2;
+    }
+
+    private boolean isProductsPath(String pathInfo) {
+        return pathInfo.matches("/\\d+/products");
+    }
+
+    private boolean isUsersPath(String pathInfo) {
+        return pathInfo.matches("/\\d+/users");
+    }
+
+    private boolean isOrderIdPath(String pathInfo) {
+        return pathInfo.matches("/\\d+");
     }
 
     private void handleException(HttpServletResponse resp, int statusCode, String message) throws IOException {
@@ -255,3 +283,4 @@ public class OrderServlet extends HttpServlet {
         resp.getWriter().write(gson.toJson(data));
     }
 }
+

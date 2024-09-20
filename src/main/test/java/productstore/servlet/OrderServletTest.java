@@ -272,20 +272,32 @@ public class OrderServletTest {
 
     @Test
     public void testDoPut_runtimeException() throws Exception {
-        
+        // Подготавливаем данные
         when(request.getPathInfo()).thenReturn("/1");
+
+        // Преобразуем пустой OrderInputDTO в JSON
         String jsonRequest = gson.toJson(new OrderInputDTO());
         when(request.getReader()).thenReturn(new BufferedReader(new StringReader(jsonRequest)));
 
-        
+        // Симулируем выброс RuntimeException при вызове метода updateOrder
         doThrow(new RuntimeException("Unexpected error")).when(orderService).updateOrder(any(OrderInputDTO.class));
 
+        // Подготавливаем writer для захвата ответа
+        PrintWriter printWriter = new PrintWriter(responseWriter);
+        when(response.getWriter()).thenReturn(printWriter);
+
+        // Вызываем метод doPut сервлета
         orderServlet.doPut(request, response);
 
-        
-        String jsonResponse = responseWriter.toString();
-        assertTrue(jsonResponse.contains("Unexpected error")); 
+        // Проверяем, что статус ответа был установлен на 500
         verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+        // Проверяем, что текст ответа содержит сообщение "Unexpected error"
+        String jsonResponse = responseWriter.toString();
+        assertTrue(jsonResponse.contains("Unexpected error"));
+
+        // Убедимся, что метод updateOrder был вызван с корректным объектом
+        verify(orderService).updateOrder(any(OrderInputDTO.class));
     }
 
     @Test
