@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class PaginationUtils {
 
+    private PaginationUtils() {}
+
     public static int getPageNumber(HttpServletRequest req) {
         String pageNumberParam = req.getParameter("pageNumber");
         if (pageNumberParam != null && !pageNumberParam.isEmpty()) {

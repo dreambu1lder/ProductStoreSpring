@@ -13,6 +13,7 @@ import productstore.model.Order;
 import productstore.model.Product;
 import productstore.service.apierror.OrderNotFoundException;
 import productstore.service.apierror.ProductNotFoundException;
+import productstore.service.apierror.ProductServiceException;
 import productstore.service.impl.OrderServiceImpl;
 import productstore.servlet.dto.input.OrderInputDTO;
 import productstore.servlet.dto.output.OrderOutputDTO;
@@ -124,8 +125,8 @@ public class OrderServiceImplTest {
 
         when(productDao.getProductById(1L)).thenThrow(new SQLException("Database error"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> orderService.createOrder(orderInputDTO));
-        assertTrue(exception.getMessage().contains("Error fetching product by ID: 1"));
+        RuntimeException exception = assertThrows(ProductServiceException.class, () -> orderService.createOrder(orderInputDTO));
+        assertTrue(exception.getMessage().contains("Failed to retrieve product with ID 1"));
     }
 
     @Test
@@ -135,8 +136,8 @@ public class OrderServiceImplTest {
 
         when(productDao.getProductById(1L)).thenThrow(new SQLException("Database error"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> orderService.addProductsToOrder(1L, Arrays.asList(1L)));
-        assertTrue(exception.getMessage().contains("Error fetching product by ID: 1"));
+        RuntimeException exception = assertThrows(ProductServiceException.class, () -> orderService.addProductsToOrder(1L, List.of(1L)));
+        assertTrue(exception.getMessage().contains("Failed to retrieve product with ID 1"));
     }
 
     @Test

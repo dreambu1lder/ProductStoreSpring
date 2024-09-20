@@ -2,7 +2,6 @@ package productstore.servlet;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,8 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import productstore.dao.impl.OrderDaoImpl;
 import productstore.dao.impl.ProductDaoImpl;
-import productstore.dao.impl.UserDaoImpl;
-import productstore.model.Order;
 import productstore.service.apierror.ApiErrorResponse;
 import productstore.service.apierror.OrderNotFoundException;
 import productstore.service.OrderService;
@@ -37,12 +34,10 @@ public class OrderServlet extends HttpServlet {
     private final OrderService orderService;
     private final Gson gson = new Gson();
 
-    
     public OrderServlet() {
         this(new OrderServiceImpl(new OrderDaoImpl(), new ProductDaoImpl(), OrderMapper.INSTANCE, ProductMapper.INSTANCE));
     }
 
-    
     public OrderServlet(OrderService orderService) {
         this.orderService = orderService;
     }
@@ -135,23 +130,20 @@ public class OrderServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
 
-        
         if (pathInfo == null || pathInfo.length() < 2) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Order ID is required.");
             return;
         }
 
-        
         if (pathInfo.matches("/\\d+/products")) {
             long orderId;
             try {
-                orderId = Long.parseLong(pathInfo.split("/")[1]); 
+                orderId = Long.parseLong(pathInfo.split("/")[1]);
             } catch (NumberFormatException e) {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format.");
                 return;
             }
 
-            
             String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
             ProductIdsRequest productIdsRequest;
             try {
@@ -166,7 +158,6 @@ public class OrderServlet extends HttpServlet {
             }
 
             try {
-                
                 orderService.addProductsToOrder(orderId, productIdsRequest.getProductIds());
                 resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } catch (OrderNotFoundException | ProductNotFoundException e) {
@@ -176,13 +167,12 @@ public class OrderServlet extends HttpServlet {
             } catch (SQLException e) {
                 handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
             }
-            return; 
+            return;
         }
 
-        
         long orderId;
         try {
-            orderId = Long.parseLong(pathInfo.substring(1)); 
+            orderId = Long.parseLong(pathInfo.substring(1));
         } catch (NumberFormatException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format.");
             return;
@@ -197,7 +187,7 @@ public class OrderServlet extends HttpServlet {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
                 return;
             }
-            orderInputDTO.setId(orderId); 
+            orderInputDTO.setId(orderId);
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
             return;
@@ -255,3 +245,4 @@ public class OrderServlet extends HttpServlet {
         resp.getWriter().write(gson.toJson(data));
     }
 }
+

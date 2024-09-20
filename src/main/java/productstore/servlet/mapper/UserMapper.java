@@ -12,7 +12,6 @@ import productstore.servlet.dto.output.UserOutputDTO;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Mapper
 public interface UserMapper {
@@ -33,6 +32,6 @@ public interface UserMapper {
         }
         return orders.stream()
                 .map(Order::getId)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
