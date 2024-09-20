@@ -16,9 +16,11 @@ import productstore.servlet.mapper.ProductMapper;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class OrderServiceImpl implements OrderService {
+
+    private static final String ORDER_WITH_ID = "User with ID ";
+    private static final String NOT_FOUND = " not found.";
     private final OrderDao orderDao;
     private final ProductDao productDao;
     private final OrderMapper orderMapper;
@@ -36,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
         List<Order> orders = orderDao.getOrdersWithPagination(pageNumber, pageSize);
         return orders.stream()
                 .map(order -> orderMapper.toOrderOutputDTO(false, order))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -48,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderMapper.toOrder(orderInputDTO);
 
         List<Product> products = orderInputDTO.getProductIds().stream()
-                .map(this::getProductById).collect(Collectors.toList());
+                .map(this::getProductById).toList();
 
         if (products.isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one product.");
@@ -70,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderOutputDTO getOrderById(long id) throws SQLException {
         Order order = orderDao.getOrderById(id);
         if (order == null) {
-            throw new OrderNotFoundException("Order with ID " + id + " not found.");
+            throw new OrderNotFoundException(ORDER_WITH_ID + id + NOT_FOUND);
         }
         return orderMapper.toOrderOutputDTO(false, order);
     }
@@ -83,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order existingOrder = orderDao.getOrderById(orderInputDTO.getId());
         if (existingOrder == null) {
-            throw new OrderNotFoundException("Order with ID " + orderInputDTO.getId() + " not found.");
+            throw new OrderNotFoundException(ORDER_WITH_ID + orderInputDTO.getId() + NOT_FOUND);
         }
 
         Order order = orderMapper.toOrder(orderInputDTO);
@@ -97,18 +99,18 @@ public class OrderServiceImpl implements OrderService {
         List<Order> orders = orderDao.getAllOrders();
         return orders.stream()
                 .map(order -> orderMapper.toOrderOutputDTO(false, order))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void addProductsToOrder(long orderId, List<Long> productIds) throws SQLException {
         Order order = orderDao.getOrderById(orderId);
         if (order == null) {
-            throw new OrderNotFoundException("Order with ID " + orderId + " not found.");
+            throw new OrderNotFoundException(ORDER_WITH_ID + orderId + NOT_FOUND);
         }
 
         List<Product> products = productIds.stream()
-                .map(this::getProductById).collect(Collectors.toList());
+                .map(this::getProductById).toList();
 
         if (products.isEmpty()) {
             throw new IllegalArgumentException("At least one product must be added to the order.");
@@ -128,18 +130,18 @@ public class OrderServiceImpl implements OrderService {
     public List<ProductOutputDTO> getProductsByOrderId(long orderId) throws SQLException {
         Order order = orderDao.getOrderById(orderId);
         if (order == null) {
-            throw new OrderNotFoundException("Order with ID " + orderId + " not found.");
+            throw new OrderNotFoundException(ORDER_WITH_ID + orderId + NOT_FOUND);
         }
         return order.getProducts().stream()
                 .map(product -> productMapper.toProductOutputDTO(false, product))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void deleteOrder(long id) throws SQLException {
         Order order = orderDao.getOrderById(id);
         if (order == null) {
-            throw new OrderNotFoundException("Order with ID " + id + " not found.");
+            throw new OrderNotFoundException(ORDER_WITH_ID + id + NOT_FOUND);
         }
         orderDao.deleteOrder(id);
     }
@@ -148,11 +150,11 @@ public class OrderServiceImpl implements OrderService {
         try {
             Product product = productDao.getProductById(productId);
             if (product == null) {
-                throw new ProductNotFoundException("Product with ID " + productId + " not found.");
+                throw new ProductNotFoundException("Product with ID " + productId + NOT_FOUND);
             }
             return product;
         } catch (SQLException e) {
-            throw new RuntimeException("Error fetching product by ID: " + productId, e);
+            throw new RuntimeException(e);
         }
     }
 }

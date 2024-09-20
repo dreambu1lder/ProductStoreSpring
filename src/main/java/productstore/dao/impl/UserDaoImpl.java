@@ -48,9 +48,7 @@ public class UserDaoImpl implements UserDao {
     @Override
     public User getUserById(long id) throws SQLException {
         String sql = SqlQueries.SELECT_USER_BY_ID.getSql();
-        return DaoUtils.executeQuery(sql, stmt -> {
-            stmt.setLong(1, id);
-        }, rs -> {
+        return DaoUtils.executeQuery(sql, stmt -> stmt.setLong(1, id), rs -> {
             Map<Long, User> userMap = mapResultSetToUsersWithOrders(rs);
             return userMap.isEmpty() ? null : userMap.values().iterator().next();
         });
@@ -76,15 +74,11 @@ public class UserDaoImpl implements UserDao {
     public void deleteUser(long id) throws SQLException {
 
         String deleteOrdersSql = SqlQueries.DELETE_USER_ORDERS.getSql();
-        DaoUtils.executeUpdate(deleteOrdersSql, stmt -> {
-            stmt.setLong(1, id);
-        });
+        DaoUtils.executeUpdate(deleteOrdersSql, stmt -> stmt.setLong(1, id));
 
 
         String deleteUserSql = SqlQueries.DELETE_USER.getSql();
-        DaoUtils.executeUpdate(deleteUserSql, stmt -> {
-            stmt.setLong(1, id);
-        });
+        DaoUtils.executeUpdate(deleteUserSql, stmt -> stmt.setLong(1, id));
     }
 
     private Map<Long, User> mapResultSetToUsersWithOrders(ResultSet rs) throws SQLException {

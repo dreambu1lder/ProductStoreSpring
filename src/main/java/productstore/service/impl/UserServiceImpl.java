@@ -10,9 +10,11 @@ import productstore.servlet.mapper.UserMapper;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class UserServiceImpl implements UserService {
+
+    private static final String USER_WITH_ID = "User with ID ";
+    private static final String NOT_FOUND = " not found.";
 
     private final UserDao userDao;
     private final UserMapper userMapper;
@@ -33,7 +35,7 @@ public class UserServiceImpl implements UserService {
     public UserOutputDTO getUserById(long id) throws SQLException {
         User user = userDao.getUserById(id);
         if (user == null) {
-            throw new UserNotFoundException("User with ID " + id + " not found.");
+            throw new UserNotFoundException(USER_WITH_ID + id + NOT_FOUND);
         }
         return userMapper.toUserOutputDTO(true, user);
     }
@@ -43,7 +45,7 @@ public class UserServiceImpl implements UserService {
         List<User> users = userDao.getAllUsers();
         return users.stream()
                 .map(user -> userMapper.toUserOutputDTO(true, user))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -51,14 +53,14 @@ public class UserServiceImpl implements UserService {
         List<User> users = userDao.getUserWithPagination(pageNumber, pageSize);
         return users.stream()
                 .map(user -> userMapper.toUserOutputDTO(true, user))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void updateUser(UserInputDTO userInputDTO) throws SQLException {
         User user = userMapper.toUser(userInputDTO);
         if (userDao.getUserById(user.getId()) == null) {
-            throw new UserNotFoundException("User with ID " + user.getId() + " not found.");
+            throw new UserNotFoundException(USER_WITH_ID + user.getId() + NOT_FOUND);
         }
         userDao.updateUser(user);
     }
@@ -66,7 +68,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(long id) throws SQLException {
         if (userDao.getUserById(id) == null) {
-            throw new UserNotFoundException("User with ID " + id + " not found.");
+            throw new UserNotFoundException(USER_WITH_ID + id + NOT_FOUND);
         }
         userDao.deleteUser(id);
     }

@@ -52,9 +52,7 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public void deleteProduct(long id) throws SQLException {
         String sql = SqlQueries.DELETE_PRODUCT.getSql();
-        DaoUtils.executeUpdate(sql, stmt -> {
-            stmt.setLong(1, id);
-        });
+        DaoUtils.executeUpdate(sql, stmt -> stmt.setLong(1, id));
     }
 
     @Override
@@ -72,9 +70,7 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public Product getProductById(long id) throws SQLException {
         String sql = SqlQueries.SELECT_PRODUCT_BY_ID.getSql();
-        return DaoUtils.executeQuery(sql, stmt -> {
-            stmt.setLong(1, id);
-        }, rs -> {
+        return DaoUtils.executeQuery(sql, stmt -> stmt.setLong(1, id), rs -> {
             if (rs.next()) {
                 Product product = mapResultSetToProduct(rs);
                 populateProductOrders(Collections.singletonList(product));
@@ -87,7 +83,6 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public List<Product> getAllProducts() throws SQLException {
         String sql = SqlQueries.SELECT_ALL_FROM.getSql().formatted("*", "products");
-        System.out.println("Executing SQL: " + sql);
         List<Product> products = DaoUtils.executeQuery(sql, stmt -> {}, this::mapResultSetToProducts);
 
         populateProductOrders(products);
@@ -102,9 +97,7 @@ public class ProductDaoImpl implements ProductDao {
                 "LEFT JOIN orders o ON op.order_id = o.id " +
                 "WHERE p.id = ?";
 
-        return DaoUtils.executeQuery(sql, stmt -> {
-            stmt.setLong(1, id);
-        }, rs -> {
+        return DaoUtils.executeQuery(sql, stmt -> stmt.setLong(1, id), rs -> {
             Product.Builder productBuilder = null;
             List<Order> orders = new ArrayList<>();
             while (rs.next()) {
@@ -128,7 +121,6 @@ public class ProductDaoImpl implements ProductDao {
         List<Product> products = new ArrayList<>();
         while (rs.next()) {
             Product product = mapResultSetToProduct(rs);
-            System.out.println("Mapped product: " + product);
             products.add(product);
         }
         return products;
@@ -163,9 +155,7 @@ public class ProductDaoImpl implements ProductDao {
 
     private List<Order> getOrdersByProductId(long productId) throws SQLException {
         String sql = SqlQueries.SELECT_ORDERS_BY_PRODUCT_ID.getSql();
-        return DaoUtils.executeQuery(sql, stmt -> {
-            stmt.setLong(1, productId);
-        }, rs -> {
+        return DaoUtils.executeQuery(sql, stmt -> stmt.setLong(1, productId), rs -> {
             List<Order> orders = new ArrayList<>();
             while (rs.next()) {
                 orders.add(mapResultSetToOrder(rs));
@@ -176,9 +166,7 @@ public class ProductDaoImpl implements ProductDao {
 
     private void updateOrdersForProduct(Product product) throws SQLException {
         String deleteSql = SqlQueries.DELETE_PRODUCT_FROM_ORDER_PRODUCTS.getSql();
-        DaoUtils.executeUpdate(deleteSql, stmt -> {
-            stmt.setLong(1, product.getId());
-        });
+        DaoUtils.executeUpdate(deleteSql, stmt -> stmt.setLong(1, product.getId()));
 
         if (product.getOrders() != null && !product.getOrders().isEmpty()) {
             String insertSql = SqlQueries.INSERT_INTO.getSql().formatted("orders_products", "order_id, product_id", "?, ?");

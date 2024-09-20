@@ -34,9 +34,8 @@ public class OrderDaoImpl implements OrderDao {
                         if (generatedKeys.next()) {
                             long generatedOrderId = generatedKeys.getLong(1);
                             order.setId(generatedOrderId);
-
+                            insertOrderProductsStmt.setLong(1, generatedOrderId);
                             for (Product product : order.getProducts()) {
-                                insertOrderProductsStmt.setLong(1, generatedOrderId);
                                 insertOrderProductsStmt.setLong(2, product.getId());
                                 insertOrderProductsStmt.addBatch();
                             }
@@ -72,8 +71,7 @@ public class OrderDaoImpl implements OrderDao {
             return null;
         }
 
-        Order order = orders.get(0);
-        return order;
+        return orders.get(0);
     }
 
     @Override
@@ -101,21 +99,15 @@ public class OrderDaoImpl implements OrderDao {
 
                 addProductsToOrder(order.getId(), order.getProducts(), connection);
 
-                Order updatedOrder = getOrderById(order.getId());
-
                 return null;
             });
-        } catch (SQLException e) {
-            throw e;
         }
     }
 
     @Override
     public void deleteOrder(long id) throws SQLException {
         String sql = SqlQueries.DELETE_ORDER.getSql();
-        DaoUtils.executeUpdate(sql, stmt -> {
-            stmt.setLong(1, id);
-        });
+        DaoUtils.executeUpdate(sql, stmt -> stmt.setLong(1, id));
     }
 
     @Override
@@ -132,9 +124,7 @@ public class OrderDaoImpl implements OrderDao {
     public List<Product> getProductsByOrderId(long orderId) throws SQLException {
         String sql = SqlQueries.SELECT_PRODUCTS_BY_ORDER_ID.getSql();
 
-        return DaoUtils.executeQuery(sql, stmt -> {
-            stmt.setLong(1, orderId);
-        }, rs -> {
+        return DaoUtils.executeQuery(sql, stmt -> stmt.setLong(1, orderId), rs -> {
             List<Product> products = new ArrayList<>();
             while (rs.next()) {
                 products.add(mapResultSetToProduct(rs));
@@ -187,16 +177,13 @@ public class OrderDaoImpl implements OrderDao {
                 });
 
                 Product product = mapResultSetToProduct(rs);
-                if (product != null) {
-                    if (order != null && order.getProducts() != null) {
+                if (product != null && order != null && order.getProducts() != null) {
                         order.getProducts().add(product);
                     }
-                }
+
             }
 
-            List<Order> orders = new ArrayList<>(orderMap.values());
-
-            return orders;
+            return new ArrayList<>(orderMap.values());
         });
     }
 
@@ -207,8 +194,12 @@ public class OrderDaoImpl implements OrderDao {
         try (PreparedStatement insertOrderProductsStmt = connection.prepareStatement(insertOrderProductsSql);
              PreparedStatement checkProductExistsStmt = connection.prepareStatement(checkProductExistsSql)) {
 
+            insertOrderProductsStmt.setLong(1, orderId);
+
+            checkProductExistsStmt.setLong(1, orderId);
+            insertOrderProductsStmt.setLong(1, orderId);
+
             for (Product product : products) {
-                checkProductExistsStmt.setLong(1, orderId);
                 checkProductExistsStmt.setLong(2, product.getId());
                 try (ResultSet rs = checkProductExistsStmt.executeQuery()) {
                     if (rs.next()) {
@@ -216,13 +207,10 @@ public class OrderDaoImpl implements OrderDao {
                     }
                 }
 
-                insertOrderProductsStmt.setLong(1, orderId);
                 insertOrderProductsStmt.setLong(2, product.getId());
                 insertOrderProductsStmt.addBatch();
             }
             insertOrderProductsStmt.executeBatch();
-        } catch (SQLException e) {
-            throw e;
         }
     }
 
@@ -231,8 +219,6 @@ public class OrderDaoImpl implements OrderDao {
         try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOrderProductsSql)) {
             deleteStmt.setLong(1, orderId);
             deleteStmt.executeUpdate();
-        } catch (SQLException e) {
-            throw e;
         }
     }
 }
