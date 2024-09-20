@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @WebServlet("/api/products/*")
 public class ProductServlet extends HttpServlet {
 
-    private final ProductService productService;
-    private final Gson gson = new GsonBuilder().serializeNulls().create();
+    private final transient ProductService productService;
+    private final transient Gson gson = new GsonBuilder().serializeNulls().create();
 
     public ProductServlet() {
         ProductMapper productMapper = ProductMapper.INSTANCE;

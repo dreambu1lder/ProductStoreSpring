@@ -26,19 +26,19 @@ import java.util.stream.Collectors;
 @WebServlet("/api/users/*")
 public class UserServlet extends HttpServlet {
 
-    private final UserService userService;
-    private final Gson gson = new Gson();
+    private final transient UserService userService;
+    private final transient Gson gson = new Gson();
 
-    
+
     public UserServlet() {
-        
+
         UserMapper userMapper = UserMapper.INSTANCE;
 
-        
+
         this.userService = new UserServiceImpl(new UserDaoImpl(), userMapper);
     }
 
-    
+
     public UserServlet(UserService userService) {
         this.userService = userService;
     }
@@ -97,7 +97,7 @@ public class UserServlet extends HttpServlet {
 
         long userId;
         try {
-            userId = Long.parseLong(pathInfo.substring(1)); 
+            userId = Long.parseLong(pathInfo.substring(1));
         } catch (NumberFormatException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format.");
             return;
@@ -112,7 +112,7 @@ public class UserServlet extends HttpServlet {
                 return;
             }
             userInputDTO = gson.fromJson(requestBody, UserInputDTO.class);
-            userInputDTO.setId(userId); 
+            userInputDTO.setId(userId);
         } catch (JsonSyntaxException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
             return;

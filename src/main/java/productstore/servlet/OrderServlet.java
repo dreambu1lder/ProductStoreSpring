@@ -31,8 +31,11 @@ import java.util.stream.Collectors;
 @WebServlet("/api/orders/*")
 public class OrderServlet extends HttpServlet {
 
-    private final OrderService orderService;
-    private final Gson gson = new Gson();
+    private static final String INVALID_JSON_FORMAT = "Invalid JSON format: ";
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+
+    private final transient OrderService orderService;
+    private final transient Gson gson = new Gson();
 
 
     public OrderServlet() {
@@ -62,7 +65,7 @@ public class OrderServlet extends HttpServlet {
         } catch (OrderNotFoundException e) {
             handleException(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -122,9 +125,9 @@ public class OrderServlet extends HttpServlet {
             writeResponse(resp, HttpServletResponse.SC_CREATED, createdOrder);
 
         } catch (JsonSyntaxException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
         } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -158,7 +161,7 @@ public class OrderServlet extends HttpServlet {
                     return;
                 }
             } catch (JsonSyntaxException e) {
-                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
+                handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
                 return;
             }
 
@@ -171,7 +174,7 @@ public class OrderServlet extends HttpServlet {
             } catch (RuntimeException e) {
                 handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error");
             } catch (SQLException e) {
-                handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+                handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR + e.getMessage());
             }
             return;
         }
@@ -196,7 +199,7 @@ public class OrderServlet extends HttpServlet {
             }
             orderInputDTO.setId(orderId);
         } catch (JsonSyntaxException e) {
-            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format: " + e.getMessage());
+            handleException(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_JSON_FORMAT + e.getMessage());
             return;
         }
 
@@ -208,7 +211,7 @@ public class OrderServlet extends HttpServlet {
         } catch (RuntimeException e) {
             handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error");
         } catch (SQLException e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR + e.getMessage());
         }
     }
 
@@ -230,7 +233,7 @@ public class OrderServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format");
         } catch (Exception e) {
-            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            handleException(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR);
         }
     }
 
