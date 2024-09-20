@@ -48,17 +48,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderMapper.toOrder(orderInputDTO);
 
         List<Product> products = orderInputDTO.getProductIds().stream()
-                .map(productId -> {
-                    try {
-                        Product product = productDao.getProductById(productId);
-                        if (product == null) {
-                            throw new ProductNotFoundException("Product with ID " + productId + " not found.");
-                        }
-                        return product;
-                    } catch (SQLException e) {
-                        throw new RuntimeException("Error fetching product by ID: " + productId, e);
-                    }
-                }).collect(Collectors.toList());
+                .map(this::getProductById).collect(Collectors.toList());
 
         if (products.isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one product.");
@@ -118,17 +108,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         List<Product> products = productIds.stream()
-                .map(productId -> {
-                    try {
-                        Product product = productDao.getProductById(productId);
-                        if (product == null) {
-                            throw new ProductNotFoundException("Product with ID " + productId + " not found.");
-                        }
-                        return product;
-                    } catch (SQLException e) {
-                        throw new RuntimeException("Error fetching product by ID: " + productId, e);
-                    }
-                }).collect(Collectors.toList());
+                .map(this::getProductById).collect(Collectors.toList());
 
         if (products.isEmpty()) {
             throw new IllegalArgumentException("At least one product must be added to the order.");
@@ -162,5 +142,17 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderNotFoundException("Order with ID " + id + " not found.");
         }
         orderDao.deleteOrder(id);
+    }
+
+    private Product getProductById(long productId) {
+        try {
+            Product product = productDao.getProductById(productId);
+            if (product == null) {
+                throw new ProductNotFoundException("Product with ID " + productId + " not found.");
+            }
+            return product;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching product by ID: " + productId, e);
+        }
     }
 }
