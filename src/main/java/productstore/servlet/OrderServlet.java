@@ -34,9 +34,11 @@ public class OrderServlet extends HttpServlet {
     private final OrderService orderService;
     private final Gson gson = new Gson();
 
+
     public OrderServlet() {
         this(new OrderServiceImpl(new OrderDaoImpl(), new ProductDaoImpl(), OrderMapper.INSTANCE, ProductMapper.INSTANCE));
     }
+
 
     public OrderServlet(OrderService orderService) {
         this.orderService = orderService;
@@ -130,10 +132,12 @@ public class OrderServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
 
+
         if (pathInfo == null || pathInfo.length() < 2) {
             handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Order ID is required.");
             return;
         }
+
 
         if (pathInfo.matches("/\\d+/products")) {
             long orderId;
@@ -143,6 +147,7 @@ public class OrderServlet extends HttpServlet {
                 handleException(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid order ID format.");
                 return;
             }
+
 
             String requestBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
             ProductIdsRequest productIdsRequest;
@@ -158,6 +163,7 @@ public class OrderServlet extends HttpServlet {
             }
 
             try {
+
                 orderService.addProductsToOrder(orderId, productIdsRequest.getProductIds());
                 resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } catch (OrderNotFoundException | ProductNotFoundException e) {
@@ -169,6 +175,7 @@ public class OrderServlet extends HttpServlet {
             }
             return;
         }
+
 
         long orderId;
         try {
@@ -245,4 +252,3 @@ public class OrderServlet extends HttpServlet {
         resp.getWriter().write(gson.toJson(data));
     }
 }
-
