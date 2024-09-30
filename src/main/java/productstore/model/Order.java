@@ -1,58 +1,53 @@
 package productstore.model;
 
+import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "orders")
 public class Order {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    private List<Product> products = new ArrayList<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderProduct> orderProducts = new ArrayList<>();
 
     public Order() {}
 
-    private Order(Builder builder) {
-        this.id = builder.id;
-        this.user = builder.user;
-        this.products = builder.products;
+    public Order(User user) {
+        this.user = user;
     }
 
     public long getId() {
         return id;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public List<Product> getProducts() {
-        if (this.products == null) {
-            this.products = new ArrayList<>();
-        }
-        return this.products; 
-    }
-
     public void setId(long id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     public void setUser(User user) {
         this.user = user;
     }
 
-    public void setProducts(List<Product> products) {
-        if (products != null) {
-            this.products = new ArrayList<>(products); 
-        } else {
-            this.products = new ArrayList<>();
-        }
+    public List<OrderProduct> getOrderProducts() {
+        return orderProducts;
     }
 
-    public Builder toBuilder() {
-        return new Builder()
-                .withId(this.id)
-                .withUser(this.user)
-                .withProducts(this.products);
+    public void setOrderProducts(List<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
     }
 
     @Override
@@ -66,7 +61,7 @@ public class Order {
     public static class Builder {
         private long id;
         private User user;
-        private List<Product> products = new ArrayList<>();
+        private List<OrderProduct> orderProducts = new ArrayList<>();
 
         public Builder withId(long id) {
             this.id = id;
@@ -78,20 +73,17 @@ public class Order {
             return this;
         }
 
-        public Builder withProducts(List<Product> products) {
-            if (products != null) {
-                this.products = new ArrayList<>(products); 
-            } else {
-                this.products = new ArrayList<>();
-            }
+        public Builder withOrderProducts(List<OrderProduct> orderProducts) {
+            this.orderProducts = orderProducts;
             return this;
         }
 
         public Order build() {
-            if (this.products == null) {
-                this.products = new ArrayList<>();
-            }
-            return new Order(this);
+            Order order = new Order();
+            order.setId(this.id);
+            order.setUser(this.user);
+            order.setOrderProducts(this.orderProducts);
+            return order;
         }
     }
 }

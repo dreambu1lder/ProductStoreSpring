@@ -1,83 +1,39 @@
 package productstore.service.impl;
 
-import productstore.dao.ProductDao;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import productstore.model.Product;
+import productstore.repository.ProductRepository;
 import productstore.service.ProductService;
-import productstore.service.apierror.ProductNotFoundException;
-import productstore.servlet.dto.input.ProductInputDTO;
-import productstore.servlet.dto.output.ProductOutputDTO;
-import productstore.servlet.mapper.ProductMapper;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
+@Service
+@Transactional
 public class ProductServiceImpl implements ProductService {
 
-    private static final String PRODUCT_WITH_ID = "Product with ID ";
-    private static final String NOT_FOUND = " not found.";
-    private final ProductDao productDao;
-    private final ProductMapper productMapper;
+    private final ProductRepository productRepository;
 
-    public ProductServiceImpl(ProductDao productDao, ProductMapper productMapper) {
-        this.productDao = productDao;
-        this.productMapper = productMapper;
+    public ProductServiceImpl(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
-    @Override
-    public ProductOutputDTO createProduct(ProductInputDTO productInputDTO) throws SQLException {
-        Product product = productMapper.toProduct(productInputDTO);
-        Product savedProduct = productDao.saveProduct(product);
-        return productMapper.toProductOutputDTO(true, savedProduct);
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
-    @Override
-    public ProductOutputDTO getProductById(long id) throws SQLException {
-        Product product = productDao.getProductById(id);
-        if (product == null) {
-            throw new ProductNotFoundException(PRODUCT_WITH_ID + id + NOT_FOUND);
-        }
-        return productMapper.toProductOutputDTO(true, product);
+    public Optional<Product> getProductById(Long id) {
+        return productRepository.findById(id);
     }
 
-    @Override
-    public List<ProductOutputDTO> getAllProducts() throws SQLException {
-        List<Product> products = productDao.getAllProducts();
-        return products.stream()
-                .map(product -> productMapper.toProductOutputDTO(true, product))
-                .toList();
+    public Product saveProduct(Product product) {
+        return productRepository.save(product);
     }
 
-    @Override
-    public List<ProductOutputDTO> getProductsWithPagination(int pageNumber, int pageSize) throws SQLException {
-        List<Product> products = productDao.getProductWithPagination(pageNumber, pageSize);
-        return products.stream()
-                .map(product -> productMapper.toProductOutputDTO(true, product))
-                .toList();
+    public void deleteProductById(Long id) {
+        productRepository.deleteById(id);
     }
 
-    @Override
-    public void updateProduct(ProductInputDTO productInputDTO) throws SQLException {
-        Product product = productMapper.toProduct(productInputDTO);
-        if (productDao.getProductById(product.getId()) == null) {
-            throw new ProductNotFoundException(PRODUCT_WITH_ID + product.getId() + NOT_FOUND);
-        }
-        productDao.updateProduct(product);
-    }
-
-    @Override
-    public void deleteProduct(long id) throws SQLException {
-        if (productDao.getProductById(id) == null) {
-            throw new ProductNotFoundException(PRODUCT_WITH_ID + id + NOT_FOUND);
-        }
-        productDao.deleteProduct(id);
-    }
-
-    @Override
-    public ProductOutputDTO getProductWithOrdersById(long id) throws SQLException {
-        Product product = productDao.getProductWithOrdersById(id);
-        if (product == null) {
-            throw new ProductNotFoundException(PRODUCT_WITH_ID + id + NOT_FOUND);
-        }
-        return productMapper.toProductOutputDTO(true, product);
-    }
+    // Дополнительные бизнес-методы (если нужны)
 }

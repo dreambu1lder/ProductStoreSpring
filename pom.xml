@@ -20,6 +20,28 @@
   </properties>
 
   <dependencies>
+
+    <!-- MapStruct Dependency -->
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <version>1.5.5.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct-processor</artifactId>
+      <version>1.5.5.Final</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Jakarta Servlet API -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+      <scope>provided</scope> <!-- Используем scope provided, так как Tomcat предоставляет реализацию -->
+    </dependency>
+
     <!-- Spring Core and Context -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -108,6 +130,22 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Testcontainers для PostgreSQL -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>1.19.8</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers для интеграции с JUnit Jupiter (если используете JUnit 5) -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>1.19.8</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -121,7 +159,21 @@
         <configuration>
           <source>21</source>
           <target>21</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>1.5.5.Final</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
+      </plugin>
+
+      <!-- Maven WAR Plugin for Packaging as WAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.4.0</version>
       </plugin>
 
       <!-- Maven Surefire Plugin for Running Unit Tests -->

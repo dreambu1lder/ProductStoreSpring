@@ -1,24 +1,35 @@
 package productstore.model;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "users")
 public class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(nullable = false, unique = true)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
-    private List<Order> orders;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
 
     public User() {}
 
-    public User(String name, String email, List<Order> orders) {
+    public User(String name, String email) {
         this.name = name;
         this.email = email;
-        this.orders = orders;
     }
 
-    public User(long id, String name, String email, List<Order> orders) {
-        this.id = id;
+    public User(String name, String email, List<Order> orders) {
         this.name = name;
         this.email = email;
         this.orders = orders;
@@ -70,7 +81,7 @@ public class User {
         private long id;
         private String name;
         private String email;
-        private List<Order> orders;
+        private List<Order> orders = new ArrayList<>();
 
         public Builder withId(long id) {
             this.id = id;
@@ -93,8 +104,12 @@ public class User {
         }
 
         public User build() {
-            return new User(id, name, email, orders);
+            User user = new User();
+            user.setId(this.id);
+            user.setName(this.name);
+            user.setEmail(this.email);
+            user.setOrders(this.orders);
+            return user;
         }
     }
-
 }

@@ -1,23 +1,20 @@
 package productstore.service;
 
-import productstore.servlet.dto.input.ProductInputDTO;
-import productstore.servlet.dto.output.ProductOutputDTO;
+import productstore.controller.dto.input.ProductInputDTO;
+import productstore.controller.dto.output.ProductOutputDTO;
+import productstore.model.Product;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductService {
-    ProductOutputDTO createProduct(ProductInputDTO productInputDTO) throws SQLException;
 
-    ProductOutputDTO getProductById(long id) throws SQLException;
+    List<Product> getAllProducts();
 
-    List<ProductOutputDTO> getAllProducts() throws SQLException;
+    Optional<Product> getProductById(Long id);
 
-    List<ProductOutputDTO> getProductsWithPagination(int pageNumber, int pageSize) throws SQLException;
+    Product saveProduct(Product product);
 
-    void updateProduct(ProductInputDTO productInputDTO) throws SQLException;
-
-    void deleteProduct(long id) throws SQLException;
-
-    ProductOutputDTO getProductWithOrdersById(long id) throws SQLException;
+    void deleteProductById(Long id);
 }

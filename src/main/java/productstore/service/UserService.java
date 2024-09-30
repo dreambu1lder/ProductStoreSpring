@@ -1,22 +1,17 @@
 package productstore.service;
 
-import productstore.servlet.dto.input.UserInputDTO;
-import productstore.servlet.dto.output.UserOutputDTO;
+import productstore.model.User;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
 
-    UserOutputDTO createUser(UserInputDTO userInputDTO) throws SQLException;
+    List<User> getAllUsers();
 
-    UserOutputDTO getUserById(long id) throws SQLException;
+    Optional<User> getUserById(Long id);
 
-    List<UserOutputDTO> getAllUsers() throws SQLException;
+    User saveUser(User user);
 
-    List<UserOutputDTO> getUsersWithPagination(int pageNumber, int pageSize) throws SQLException;
-
-    void updateUser(UserInputDTO userInputDTO) throws SQLException;
-
-    void deleteUser(long id) throws SQLException;
+    void deleteUserById(Long id);
 }

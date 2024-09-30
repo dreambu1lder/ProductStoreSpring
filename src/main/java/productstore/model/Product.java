@@ -1,61 +1,64 @@
 package productstore.model;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "products")
 public class Product {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private double price;
-    private List<Order> orders;
 
-    public Product(){}
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderProduct> orderProducts = new ArrayList<>();
 
-    private Product(Builder builder) {
-        this.id = builder.id;
-        this.name = builder.name;
-        this.price = builder.price;
-        this.orders = builder.orders;
+    public Product() {}
+
+    public Product(String name, double price) {
+        this.name = name;
+        this.price = price;
     }
 
     public long getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public List<Order> getOrders() {
-        return orders;
-    }
-
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
+    public double getPrice() {
+        return price;
+    }
+
     public void setPrice(double price) {
         this.price = price;
     }
 
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
+    public List<OrderProduct> getOrderProducts() {
+        return orderProducts;
     }
 
-    public Builder toBuilder() {
-        return new Builder()
-                .withId(this.id)
-                .withName(this.name)
-                .withPrice(this.price)
-                .withOrders(this.orders);
+    public void setOrderProducts(List<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class Product {
         private long id;
         private String name;
         private double price;
-        private List<Order> orders;
+        private List<OrderProduct> orderProducts = new ArrayList<>();
 
         public Builder withId(long id) {
             this.id = id;
@@ -88,13 +91,18 @@ public class Product {
             return this;
         }
 
-        public Builder withOrders(List<Order> orders) {
-            this.orders = orders;
+        public Builder withOrderProducts(List<OrderProduct> orderProducts) {
+            this.orderProducts = orderProducts;
             return this;
         }
 
         public Product build() {
-            return new Product(this);
+            Product product = new Product();
+            product.setId(this.id);
+            product.setName(this.name);
+            product.setPrice(this.price);
+            product.setOrderProducts(this.orderProducts);
+            return product;
         }
     }
 }

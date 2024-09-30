@@ -1,75 +1,39 @@
 package productstore.service.impl;
 
-import productstore.dao.UserDao;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import productstore.model.User;
+import productstore.repository.UserRepository;
 import productstore.service.UserService;
-import productstore.service.apierror.UserNotFoundException;
-import productstore.servlet.dto.input.UserInputDTO;
-import productstore.servlet.dto.output.UserOutputDTO;
-import productstore.servlet.mapper.UserMapper;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
+@Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
-    private static final String USER_WITH_ID = "User with ID ";
-    private static final String NOT_FOUND = " not found.";
+    private final UserRepository userRepository;
 
-    private final UserDao userDao;
-    private final UserMapper userMapper;
-
-    public UserServiceImpl(UserDao userDao, UserMapper userMapper) {
-        this.userDao = userDao;
-        this.userMapper = userMapper;
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    @Override
-    public UserOutputDTO createUser(UserInputDTO userInputDTO) throws SQLException {
-        User user = userMapper.toUser(userInputDTO);
-        User savedUser = userDao.saveUser(user);
-        return userMapper.toUserOutputDTO(true, savedUser);
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
-    @Override
-    public UserOutputDTO getUserById(long id) throws SQLException {
-        User user = userDao.getUserById(id);
-        if (user == null) {
-            throw new UserNotFoundException(USER_WITH_ID + id + NOT_FOUND);
-        }
-        return userMapper.toUserOutputDTO(true, user);
+    public Optional<User> getUserById(Long id) {
+        return userRepository.findById(id);
     }
 
-    @Override
-    public List<UserOutputDTO> getAllUsers() throws SQLException {
-        List<User> users = userDao.getAllUsers();
-        return users.stream()
-                .map(user -> userMapper.toUserOutputDTO(true, user))
-                .toList();
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
-    @Override
-    public List<UserOutputDTO> getUsersWithPagination(int pageNumber, int pageSize) throws SQLException {
-        List<User> users = userDao.getUserWithPagination(pageNumber, pageSize);
-        return users.stream()
-                .map(user -> userMapper.toUserOutputDTO(true, user))
-                .toList();
+    public void deleteUserById(Long id) {
+        userRepository.deleteById(id);
     }
 
-    @Override
-    public void updateUser(UserInputDTO userInputDTO) throws SQLException {
-        User user = userMapper.toUser(userInputDTO);
-        if (userDao.getUserById(user.getId()) == null) {
-            throw new UserNotFoundException(USER_WITH_ID + user.getId() + NOT_FOUND);
-        }
-        userDao.updateUser(user);
-    }
-
-    @Override
-    public void deleteUser(long id) throws SQLException {
-        if (userDao.getUserById(id) == null) {
-            throw new UserNotFoundException(USER_WITH_ID + id + NOT_FOUND);
-        }
-        userDao.deleteUser(id);
-    }
+    // Дополнительные бизнес-методы (если нужны)
 }
