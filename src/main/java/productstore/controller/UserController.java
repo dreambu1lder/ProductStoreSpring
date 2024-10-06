@@ -1,13 +1,12 @@
 package productstore.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import productstore.controller.dto.input.UserChangeEmailDTO;
 import productstore.controller.dto.input.UserInputDTO;
 import productstore.controller.dto.output.UserOutputDTO;
-import productstore.model.User;
 import productstore.service.UserService;
 
 import java.util.List;
@@ -33,7 +32,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserOutputDTO> createUser(@RequestBody UserInputDTO userDTO) {
+    public ResponseEntity<UserOutputDTO> createUser(@Valid @RequestBody UserInputDTO userDTO) {
         return new ResponseEntity<>(userService.saveUser(userDTO), HttpStatus.CREATED);
     }
 
@@ -44,7 +43,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserOutputDTO> updateUserById(@PathVariable("id") Long id, @RequestBody UserChangeEmailDTO userChangeEmailDTO) {
+    public ResponseEntity<UserOutputDTO> updateUserById(@PathVariable("id") Long id, @Valid @RequestBody UserChangeEmailDTO userChangeEmailDTO) {
         return new ResponseEntity<>(userService.updateUserById(id, userChangeEmailDTO), HttpStatus.ACCEPTED);
     }
 }

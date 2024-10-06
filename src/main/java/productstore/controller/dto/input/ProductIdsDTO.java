@@ -1,12 +1,16 @@
 package productstore.controller.dto.input;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProductIdsDTO {
 
+    @NotEmpty(message = "Product IDs cannot be empty")
+    @Size(min = 1, message = "There must be at least one product ID")
     List<Long> productIds = new ArrayList<>();
-
 
     public List<Long> getProductIds() {
         return productIds;

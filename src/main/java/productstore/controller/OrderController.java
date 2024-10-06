@@ -1,5 +1,6 @@
 package productstore.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public OrderOutputDTO saveOrder(@RequestBody OrderInputDTO orderInputDTO) {
+    public OrderOutputDTO saveOrder(@Valid @RequestBody OrderInputDTO orderInputDTO) {
         return orderService.saveOrder(orderInputDTO);
     }
 
@@ -43,7 +44,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderOutputDTO> updateOrderById(@PathVariable("id") Long id, @RequestBody ProductIdsDTO productIdsDTO) {
+    public ResponseEntity<OrderOutputDTO> updateOrderById(@PathVariable("id") Long id, @Valid @RequestBody ProductIdsDTO productIdsDTO) {
         return new ResponseEntity<>(orderService.updateOrderById(id, productIdsDTO), HttpStatus.CREATED);
     }
 }

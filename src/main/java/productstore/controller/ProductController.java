@@ -1,12 +1,11 @@
 package productstore.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import productstore.controller.dto.input.ProductInputDTO;
 import productstore.controller.dto.output.ProductOutputDTO;
-import productstore.model.Product;
 import productstore.service.ProductService;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductOutputDTO> saveProduct(@RequestBody ProductInputDTO productInputDTO) {
+    public ResponseEntity<ProductOutputDTO> saveProduct(@Valid @RequestBody ProductInputDTO productInputDTO) {
         return new ResponseEntity<>(productService.saveProduct(productInputDTO), HttpStatus.CREATED);
     }
 
@@ -43,7 +42,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductOutputDTO> updateProductById(@PathVariable("id") Long id, @RequestBody ProductInputDTO productInputDTO) {
+    public ResponseEntity<ProductOutputDTO> updateProductById(@PathVariable("id") Long id, @Valid @RequestBody ProductInputDTO productInputDTO) {
         return new ResponseEntity<>(productService.updateProductById(id, productInputDTO), HttpStatus.ACCEPTED);
     }
 
