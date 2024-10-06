@@ -1,5 +1,6 @@
 package productstore.service;
 
+import productstore.controller.dto.input.UserChangeEmailDTO;
 import productstore.controller.dto.input.UserInputDTO;
 import productstore.controller.dto.output.UserOutputDTO;
 import productstore.model.User;
@@ -18,4 +19,6 @@ public interface UserService {
     UserOutputDTO saveUser(UserInputDTO userDTO);
 
     void deleteUserById(Long id);
+
+    UserOutputDTO updateUserById(Long id, UserChangeEmailDTO userChangeEmailDTO);
 }

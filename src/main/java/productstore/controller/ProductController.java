@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import productstore.controller.dto.input.ProductInputDTO;
 import productstore.controller.dto.output.ProductOutputDTO;
+import productstore.model.Product;
 import productstore.service.ProductService;
 
 import java.util.List;
@@ -31,14 +32,19 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductOutputDTO> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductOutputDTO> getProductById(@PathVariable("id") Long id) {
         return new ResponseEntity<>(productService.getProductById(id), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProductById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProductById(@PathVariable("id") Long id) {
         productService.deleteProductById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductOutputDTO> updateProductById(@PathVariable("id") Long id, @RequestBody ProductInputDTO productInputDTO) {
+        return new ResponseEntity<>(productService.updateProductById(id, productInputDTO), HttpStatus.ACCEPTED);
     }
 
 }

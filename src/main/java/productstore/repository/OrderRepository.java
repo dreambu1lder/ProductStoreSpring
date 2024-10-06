@@ -10,10 +10,14 @@ import productstore.model.Order;
 import productstore.model.Product;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"user", "orderProducts"})
     List<Order> findAll();
+
+    @EntityGraph(attributePaths = {"user", "orderProducts"})
+    Optional<Order> findById(Long id);
 }

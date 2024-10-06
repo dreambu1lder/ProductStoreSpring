@@ -27,12 +27,12 @@ public class OrderServiceImpl implements OrderService {
         this.orderMapper = orderMapper;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<OrderOutputDTO> getAllOrders() {
         return orderMapper.toDTOs(orderRepository.findAll());
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public OrderOutputDTO getOrderById(Long id) {
         return orderMapper.toDTO(orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order with id " + id + " not found.")));

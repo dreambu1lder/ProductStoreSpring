@@ -18,7 +18,7 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     @JoinTable(
             name = "orders_products",
             joinColumns = @JoinColumn(name = "order_id"),
