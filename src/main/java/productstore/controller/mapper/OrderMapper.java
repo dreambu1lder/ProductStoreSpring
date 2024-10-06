@@ -17,10 +17,18 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, ProductMapper.class})
 public abstract class OrderMapper {
 
-    @Autowired
     private UserService userService;
-    @Autowired
     private ProductService productService;
+
+    // Сеттеры для внедрения зависимостей
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+    @Autowired
+    public void setProductService(ProductService productService) {
+        this.productService = productService;
+    }
 
     @Mapping(target = "products", source = "orderProducts")
     @Mapping(target = "user", source = "user")

@@ -45,6 +45,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public void deleteOrderById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id " + id));
+
+        // Разорвать связи с продуктами
+        order.getOrderProducts().clear();
+        orderRepository.save(order);
+
+        // Удалить заказ
         orderRepository.deleteById(id);
     }
 

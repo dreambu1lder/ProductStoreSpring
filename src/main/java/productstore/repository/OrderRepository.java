@@ -20,4 +20,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"user", "orderProducts"})
     Optional<Order> findById(Long id);
+
+    List<Order> findAllByOrderProductsContaining(Product product);
 }

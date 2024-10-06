@@ -8,6 +8,7 @@ import productstore.controller.dto.output.ProductOutputDTO;
 import productstore.controller.mapper.ProductMapper;
 import productstore.model.Order;
 import productstore.model.Product;
+import productstore.repository.OrderRepository;
 import productstore.repository.ProductRepository;
 import productstore.service.ProductService;
 import productstore.service.exception.ProductNotFoundException;
@@ -19,10 +20,12 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final OrderRepository orderRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository, ProductMapper productMapper) {
+    public ProductServiceImpl(ProductRepository productRepository, ProductMapper productMapper, OrderRepository orderRepository) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
+        this.orderRepository = orderRepository;
     }
 
     @Transactional(readOnly = true)
@@ -51,10 +54,18 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id " + id));
+
+        // Удалить продукт из всех заказов
         for (Order order : product.getOrders()) {
             order.getOrderProducts().remove(product);
+            orderRepository.save(order); // Сохраняем изменения
         }
-        productRepository.deleteById(id);
+
+        // Очистить список заказов у продукта, чтобы избежать ошибок при попытке удалить продукт
+        product.getOrders().clear();
+
+        // Теперь можно удалить продукт
+        productRepository.delete(product);
     }
 
     @Transactional
