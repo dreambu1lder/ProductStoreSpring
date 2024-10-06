@@ -1,5 +1,7 @@
 package productstore.service;
 
+import productstore.controller.dto.input.UserInputDTO;
+import productstore.controller.dto.output.UserOutputDTO;
 import productstore.model.User;
 
 import java.util.List;
@@ -7,11 +9,13 @@ import java.util.Optional;
 
 public interface UserService {
 
-    List<User> getAllUsers();
+    User findById(Long id);
 
-    Optional<User> getUserById(Long id);
+    List<UserOutputDTO> getAllUsers();
 
-    User saveUser(User user);
+    UserOutputDTO getUserById(Long id);
+
+    UserOutputDTO saveUser(UserInputDTO userDTO);
 
     void deleteUserById(Long id);
 }

@@ -7,6 +7,7 @@
   <groupId>ru.dreambu1lder</groupId>
   <artifactId>ProductStoreSpring</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <packaging>war</packaging>
 
   <name>ProductStoreSpring REST API</name>
   <url>http://www.example.com</url>
@@ -20,6 +21,22 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.17.2</version> <!-- Замените на актуальную версию -->
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.17.2</version> <!-- Замените на актуальную версию -->
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.17.2</version> <!-- Замените на актуальную версию -->
+    </dependency>
 
     <!-- MapStruct Dependency -->
     <dependency>
@@ -149,7 +166,7 @@
   </dependencies>
 
   <build>
-    <finalName>ProductStoreSpring</finalName>
+    <finalName>ProductStore</finalName>
     <plugins>
       <!-- Maven Compiler Plugin -->
       <plugin>

@@ -3,12 +3,14 @@ package productstore.config;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
 
 @Configuration
+@PropertySource("classpath:application.properties")
 public class DataSourceConfig {
 
     private final Environment env;
@@ -19,6 +21,10 @@ public class DataSourceConfig {
 
     @Bean
     public DataSource dataSource() {
+        System.out.println("spring.datasource.url: " + env.getProperty("spring.datasource.url"));
+        System.out.println("spring.datasource.username: " + env.getProperty("spring.datasource.username"));
+        System.out.println("spring.datasource.password: " + env.getProperty("spring.datasource.password"));
+        System.out.println("spring.datasource.driver-class-name: " + env.getProperty("spring.datasource.driver-class-name"));
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(env.getProperty("spring.datasource.url"));
         dataSource.setUsername(env.getProperty("spring.datasource.username"));

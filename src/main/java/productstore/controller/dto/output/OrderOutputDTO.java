@@ -3,9 +3,18 @@ package productstore.controller.dto.output;
 import java.util.List;
 
 public class OrderOutputDTO {
+
     private long id;
     private UserOutputDTO user;
     private List<ProductOutputDTO> products;
+
+    public OrderOutputDTO() {}
+
+    public OrderOutputDTO(long id, UserOutputDTO user, List<ProductOutputDTO> products) {
+        this.id = id;
+        this.user = user;
+        this.products = products;
+    }
 
     public long getId() {
         return id;

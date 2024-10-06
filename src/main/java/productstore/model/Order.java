@@ -14,12 +14,17 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderProduct> orderProducts = new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "orders_products",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private List<Product> orderProducts = new ArrayList<>();
 
     public Order() {}
 
@@ -43,19 +48,22 @@ public class Order {
         this.user = user;
     }
 
-    public List<OrderProduct> getOrderProducts() {
+    public List<Product> getOrderProducts() {
         return orderProducts;
     }
 
-    public void setOrderProducts(List<OrderProduct> orderProducts) {
-        this.orderProducts = orderProducts;
+    public void setOrderProducts(List<Product> orderProducts) {
+        this.orderProducts.clear();
+        if (orderProducts != null) {
+            this.orderProducts.addAll(orderProducts);
+        }
     }
 
     @Override
     public String toString() {
         return "Order{" +
                 "id=" + id +
-                ", user=" + user +
+                ", user=" + user.getName() +
                 '}';
     }
 
@@ -75,7 +83,7 @@ public class Order {
     public static class Builder {
         private long id;
         private User user;
-        private List<OrderProduct> orderProducts = new ArrayList<>();
+        private List<Product> orderProducts = new ArrayList<>();
 
         public Builder withId(long id) {
             this.id = id;
@@ -87,7 +95,7 @@ public class Order {
             return this;
         }
 
-        public Builder withOrderProducts(List<OrderProduct> orderProducts) {
+        public Builder withOrderProducts(List<Product> orderProducts) {
             this.orderProducts = orderProducts;
             return this;
         }

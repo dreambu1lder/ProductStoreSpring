@@ -4,17 +4,17 @@ import productstore.controller.dto.input.ProductInputDTO;
 import productstore.controller.dto.output.ProductOutputDTO;
 import productstore.model.Product;
 
-import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
 public interface ProductService {
 
-    List<Product> getAllProducts();
+    List<ProductOutputDTO> getAllProducts();
 
-    Optional<Product> getProductById(Long id);
+    ProductOutputDTO getProductById(Long id);
 
-    Product saveProduct(Product product);
+    ProductOutputDTO saveProduct(ProductInputDTO product);
 
     void deleteProductById(Long id);
+
+    Product findById(Long id);
 }

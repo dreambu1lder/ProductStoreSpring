@@ -1,25 +1,18 @@
 package productstore.controller.dto.input;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderInputDTO {
-    private Long id; 
-    private long userId;
-    private List<Long> productIds;
 
-    public Long getId() {
-        return id; 
-    }
+    private Long userId;
+    private List<Long> productIds = new ArrayList<>();
 
-    public void setId(Long id) {
-        this.id = id; 
-    }
-
-    public long getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(long userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
@@ -34,10 +27,8 @@ public class OrderInputDTO {
     @Override
     public String toString() {
         return "OrderInputDTO{" +
-                "id=" + id +
-                ", userId=" + userId +
+                "userId=" + userId +
                 ", productIds=" + productIds +
                 '}';
     }
 }
-

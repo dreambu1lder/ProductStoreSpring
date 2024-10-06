@@ -5,26 +5,17 @@ import java.util.List;
 
 public class UserOutputDTO {
 
-    private long id;
+    private Long id;
     private String name;
     private String email;
-    private List<Long> orderIds = new ArrayList<>();
+    private List<Long> orderOutputDTOS = new ArrayList<>();
 
     public UserOutputDTO() {}
 
-    public UserOutputDTO(long id, String name, String email, List<Long> orderIds) {
+    public UserOutputDTO(Long id, String name, String email) {
         this.id = id;
         this.name = name;
         this.email = email;
-        this.orderIds = orderIds;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -43,12 +34,20 @@ public class UserOutputDTO {
         this.email = email;
     }
 
-    public List<Long> getOrderIds() {
-        return orderIds;
+    public List<Long> getOrderOutputDTOS() {
+        return orderOutputDTOS;
     }
 
-    public void setOrderIds(List<Long> orderIds) {
-        this.orderIds = orderIds;
+    public void setOrderOutputDTOS(List<Long> orderOutputDTOS) {
+        this.orderOutputDTOS = orderOutputDTOS;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override
@@ -57,7 +56,7 @@ public class UserOutputDTO {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", orderIds=" + orderIds +
+                ", orderOutputDTOS=" + orderOutputDTOS +
                 '}';
     }
 }

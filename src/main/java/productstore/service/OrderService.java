@@ -1,25 +1,23 @@
 package productstore.service;
 
 import productstore.controller.dto.input.OrderInputDTO;
+import productstore.controller.dto.input.ProductIdsDTO;
 import productstore.controller.dto.output.OrderOutputDTO;
-import productstore.controller.dto.output.ProductOutputDTO;
 import productstore.model.Order;
-import productstore.model.OrderProduct;
 import productstore.model.Product;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 public interface OrderService {
 
-    List<Order> getAllOrders();
+    List<OrderOutputDTO> getAllOrders();
 
-    Optional<Order> getOrderById(Long id);
+    OrderOutputDTO getOrderById(Long id);
 
-    Order saveOrder(Order order);
+    OrderOutputDTO saveOrder(OrderInputDTO orderInputDTO);
 
     void deleteOrderById(Long id);
 
-    OrderProduct addProductToOrder(Order order, Product product, int quantity);
+    OrderOutputDTO updateOrderById(Long id, ProductIdsDTO productIdsDTO);
 }

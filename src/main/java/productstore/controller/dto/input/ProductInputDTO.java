@@ -1,17 +1,9 @@
 package productstore.controller.dto.input;
 
 public class ProductInputDTO {
-    private Long id; 
+
     private String name;
-    private Double price; 
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private double price;
 
     public String getName() {
         return name;
@@ -21,19 +13,18 @@ public class ProductInputDTO {
         this.name = name;
     }
 
-    public Double getPrice() { 
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) { 
+    public void setPrice(double price) {
         this.price = price;
     }
 
     @Override
     public String toString() {
         return "ProductInputDTO{" +
-                "id=" + id + 
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", price=" + price +
                 '}';
     }

@@ -20,8 +20,8 @@ public class Product {
     @Column(nullable = false)
     private double price;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderProduct> orderProducts = new ArrayList<>();
+    @ManyToMany(mappedBy = "orderProducts")
+    private List<Order> orders = new ArrayList<>();
 
     public Product() {}
 
@@ -54,12 +54,12 @@ public class Product {
         this.price = price;
     }
 
-    public List<OrderProduct> getOrderProducts() {
-        return orderProducts;
+    public List<Order> getOrders() {
+        return orders;
     }
 
-    public void setOrderProducts(List<OrderProduct> orderProducts) {
-        this.orderProducts = orderProducts;
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class Product {
         private long id;
         private String name;
         private double price;
-        private List<OrderProduct> orderProducts = new ArrayList<>();
+        private List<Order> orders = new ArrayList<>();
 
         public Builder withId(long id) {
             this.id = id;
@@ -105,8 +105,8 @@ public class Product {
             return this;
         }
 
-        public Builder withOrderProducts(List<OrderProduct> orderProducts) {
-            this.orderProducts = orderProducts;
+        public Builder withOrders(List<Order> orders) {
+            this.orders = orders;
             return this;
         }
 
@@ -115,7 +115,7 @@ public class Product {
             product.setId(this.id);
             product.setName(this.name);
             product.setPrice(this.price);
-            product.setOrderProducts(this.orderProducts);
+            product.setOrders(this.orders);
             return product;
         }
     }

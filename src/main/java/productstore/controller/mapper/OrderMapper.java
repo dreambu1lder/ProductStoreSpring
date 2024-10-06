@@ -1,31 +1,50 @@
 package productstore.controller.mapper;
 
 import org.mapstruct.*;
-import productstore.model.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 import productstore.controller.dto.input.OrderInputDTO;
 import productstore.controller.dto.output.OrderOutputDTO;
+import productstore.model.Order;
 import productstore.model.Product;
 import productstore.model.User;
+import productstore.service.ProductService;
+import productstore.service.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class, ProductMapper.class})
-public interface OrderMapper {
+public abstract class OrderMapper {
 
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ProductService productService;
+
+    @Mapping(target = "products", source = "orderProducts")
     @Mapping(target = "user", source = "user")
-    @Mapping(target = "products", source = "products")
-    OrderOutputDTO toOrderOutputDTO(@Context boolean includeOrderIds, Order order);
+    public abstract OrderOutputDTO toDTO(Order order);
 
-    @Mapping(target = "user.id", source = "userId")
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "products", ignore = true) // Will be set separately
-    Order toOrder(OrderInputDTO orderInputDTO);
+    @Mapping(target = "products", source = "orderProducts")
+    @Mapping(target = "user", source = "user")
+    public abstract List<OrderOutputDTO> toDTOs(List<Order> orders);
 
+
+    @Mapping(target = "user", source = "userId", qualifiedByName = "mapUserIdToUser")
+    @Mapping(target = "orderProducts", source = "productIds", qualifiedByName = "mapProductIdsToProducts")
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", source = "user")
-    @Mapping(target = "products", source = "products")
-    Order toOrder(OrderInputDTO orderInputDTO, User user, List<Product> products);
+    public abstract Order toEntity(OrderInputDTO orderInputDTO);
 
-    List<OrderOutputDTO> toOrderOutputDTOList(@Context boolean includeOrderIds, List<Order> orders);
+    @Named("mapUserIdToUser")
+    public User mapUserIdToUser(Long userId) {
+        return userService.findById(userId);
+    }
+
+    @Named("mapProductIdsToProducts")
+    public List<Product> mapProductIdsToProducts(List<Long> productIds) {
+        return productIds.stream()
+                .map(productService::findById)
+                .collect(Collectors.toList());
+    }
 }
