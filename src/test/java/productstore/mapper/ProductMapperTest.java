@@ -19,22 +19,18 @@ class ProductMapperTest {
 
     @BeforeEach
     void setUp() {
-        // Создаем экземпляр ProductMapper перед каждым тестом
         productMapper = Mappers.getMapper(ProductMapper.class);
     }
 
     @Test
     void shouldMapProductToDTO() {
-        // Given
         Product product = new Product();
         product.setId(1L);
         product.setName("Test Product");
         product.setPrice(99.99);
 
-        // When
         ProductOutputDTO dto = productMapper.toDTO(product);
 
-        // Then
         assertNotNull(dto);
         assertEquals(1L, dto.getId());
         assertEquals("Test Product", dto.getName());
@@ -43,7 +39,6 @@ class ProductMapperTest {
 
     @Test
     void shouldMapProductsToDTOs() {
-        // Given
         Product product1 = new Product();
         product1.setId(1L);
         product1.setName("Product 1");
@@ -56,10 +51,8 @@ class ProductMapperTest {
 
         List<Product> products = Arrays.asList(product1, product2);
 
-        // When
         List<ProductOutputDTO> dtos = productMapper.toDTOs(products);
 
-        // Then
         assertNotNull(dtos);
         assertEquals(2, dtos.size());
 
@@ -74,17 +67,14 @@ class ProductMapperTest {
 
     @Test
     void shouldMapProductInputDTOToEntity() {
-        // Given
         ProductInputDTO inputDTO = new ProductInputDTO();
         inputDTO.setName("New Product");
         inputDTO.setPrice(120.0);
 
-        // When
         Product product = productMapper.toEntity(inputDTO);
 
-        // Then
         assertNotNull(product);
-        assertNull(product.getId()); // замените на 0L, если тип `id` - `long`
+        assertNull(product.getId());
         assertEquals("New Product", product.getName());
         assertEquals(120.0, product.getPrice());
     }

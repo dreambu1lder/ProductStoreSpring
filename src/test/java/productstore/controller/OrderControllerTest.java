@@ -53,10 +53,8 @@ public class OrderControllerTest {
 
     @BeforeEach
     public void setUp() {
-        // Настройка MockMvc
         mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
 
-        // Пример данных для тестирования
         UserOutputDTO user = new UserOutputDTO(1L, "Test User", "user@example.com");
 
         ProductOutputDTO product1 = new ProductOutputDTO(100L, "Product1", 10.0);
@@ -74,10 +72,8 @@ public class OrderControllerTest {
 
     @Test
     public void testSaveOrder() throws Exception {
-        // Мокаем поведение сервиса
         when(orderService.saveOrder(any(OrderInputDTO.class))).thenReturn(orderOutputDTO);
 
-        // Отправляем POST-запрос и проверяем результат
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderInputDTO)))
@@ -92,10 +88,8 @@ public class OrderControllerTest {
     public void testGetAllOrders() throws Exception {
         List<OrderOutputDTO> orderOutputDTOList = Arrays.asList(orderOutputDTO);
 
-        // Мокаем поведение сервиса
         when(orderService.getAllOrders()).thenReturn(orderOutputDTOList);
 
-        // Отправляем GET-запрос и проверяем результат
         mockMvc.perform(get("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -106,17 +100,14 @@ public class OrderControllerTest {
 
     @Test
     public void testDeleteOrderById() throws Exception {
-        // Мокаем поведение сервиса для удаления
         mockMvc.perform(delete("/api/orders/{id}", 1L))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     public void testGetOrderById() throws Exception {
-        // Мокаем поведение сервиса
         when(orderService.getOrderById(anyLong())).thenReturn(orderOutputDTO);
 
-        // Отправляем GET-запрос и проверяем результат
         mockMvc.perform(get("/api/orders/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -127,10 +118,8 @@ public class OrderControllerTest {
 
     @Test
     public void testUpdateOrderById() throws Exception {
-        // Мокаем поведение сервиса
         when(orderService.updateOrderById(anyLong(), any(ProductIdsDTO.class))).thenReturn(orderOutputDTO);
 
-        // Отправляем PUT-запрос и проверяем результат
         mockMvc.perform(put("/api/orders/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productIdsDTO)))

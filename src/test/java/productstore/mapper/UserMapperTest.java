@@ -63,10 +63,8 @@ class UserMapperTest {
 
         List<User> users = Arrays.asList(user1, user2);
 
-        // When
         List<UserOutputDTO> userOutputDTOs = userMapper.toDTOs(users);
 
-        // Then
         assertNotNull(userOutputDTOs);
         assertEquals(2, userOutputDTOs.size());
         assertEquals(1L, userOutputDTOs.get(0).getId());
@@ -77,19 +75,16 @@ class UserMapperTest {
 
     @Test
     void shouldMapUserInputDTOToUserEntity() {
-        // Given
         UserInputDTO userInputDTO = new UserInputDTO();
         userInputDTO.setName("John Doe");
         userInputDTO.setEmail("john@example.com");
 
-        // When
         User user = userMapper.toEntity(userInputDTO);
 
-        // Then
         assertNotNull(user);
-        assertNull(user.getId()); // Проверяем, что id игнорируется при маппинге
+        assertNull(user.getId());
         assertEquals("John Doe", user.getName());
         assertEquals("john@example.com", user.getEmail());
-        assertTrue(user.getOrders() == null || user.getOrders().isEmpty()); // Проверяем, что orders - либо null, либо пустой список
+        assertTrue(user.getOrders() == null || user.getOrders().isEmpty());
     }
 }

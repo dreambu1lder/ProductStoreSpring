@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,7 +45,6 @@ public class ProductControllerTest {
     public void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
 
-        // Initialize DTOs for testing
         productInputDTO = new ProductInputDTO();
         productInputDTO.setName("Test Product");
         productInputDTO.setPrice(100.0);
@@ -61,10 +59,8 @@ public class ProductControllerTest {
     public void testGetAllProducts() throws Exception {
         List<ProductOutputDTO> productList = Collections.singletonList(productOutputDTO);
 
-        // Mocking service layer
         when(productService.getAllProducts()).thenReturn(productList);
 
-        // Performing GET request and verifying response
         mockMvc.perform(get("/api/products")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -80,7 +76,6 @@ public class ProductControllerTest {
         // Mocking service layer
         when(productService.saveProduct(any(ProductInputDTO.class))).thenReturn(productOutputDTO);
 
-        // Performing POST request and verifying response
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productInputDTO)))
@@ -93,10 +88,8 @@ public class ProductControllerTest {
 
     @Test
     public void testGetProductById() throws Exception {
-        // Mocking service layer
         when(productService.getProductById(anyLong())).thenReturn(productOutputDTO);
 
-        // Performing GET request and verifying response
         mockMvc.perform(get("/api/products/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -108,17 +101,14 @@ public class ProductControllerTest {
 
     @Test
     public void testDeleteProductById() throws Exception {
-        // Performing DELETE request and verifying response
         mockMvc.perform(delete("/api/products/{id}", 1L))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     public void testUpdateProductById() throws Exception {
-        // Mocking service layer
         when(productService.updateProductById(anyLong(), any(ProductInputDTO.class))).thenReturn(productOutputDTO);
 
-        // Performing PUT request and verifying response
         mockMvc.perform(put("/api/products/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productInputDTO)))

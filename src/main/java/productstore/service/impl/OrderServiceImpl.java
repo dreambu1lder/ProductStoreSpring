@@ -13,7 +13,6 @@ import productstore.service.OrderService;
 import productstore.service.exception.OrderNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -47,12 +46,8 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id " + id));
-
-        // Разорвать связи с продуктами
         order.getOrderProducts().clear();
         orderRepository.save(order);
-
-        // Удалить заказ
         orderRepository.deleteById(id);
     }
 

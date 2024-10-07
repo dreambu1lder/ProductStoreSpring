@@ -49,12 +49,6 @@ public class UserControllerTest {
     public void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
 
-        // Инициализация ObjectMapper
-        if (objectMapper == null) {
-            objectMapper = new ObjectMapper();
-        }
-
-        // Инициализация тестовых объектов
         userInputDTO = new UserInputDTO();
         userInputDTO.setName("Test User");
         userInputDTO.setEmail("test@example.com");

@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import productstore.controller.dto.input.OrderInputDTO;
 import productstore.controller.dto.output.OrderOutputDTO;
-import productstore.controller.mapper.OrderMapper;
 import productstore.controller.mapper.OrderMapperImpl;
 import productstore.controller.mapper.ProductMapper;
 import productstore.controller.mapper.UserMapper;
@@ -33,7 +32,6 @@ class OrderMapperTest {
     @Mock
     private ProductService productService;
 
-    // Используемые мапперы
     private final ProductMapper productMapper = Mappers.getMapper(ProductMapper.class);
     private final UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
@@ -44,11 +42,9 @@ class OrderMapperTest {
     void setUp() throws IllegalAccessException, NoSuchFieldException {
         MockitoAnnotations.openMocks(this);
 
-        // Вручную устанавливаем зависимости в маппер
         orderMapper.setUserService(userService);
         orderMapper.setProductService(productService);
 
-        // Устанавливаем productMapper и userMapper вручную, поскольку @InjectMocks не инициализирует их
         Field productMapperField = orderMapper.getClass().getDeclaredField("productMapper");
         productMapperField.setAccessible(true);
         productMapperField.set(orderMapper, productMapper);
@@ -60,7 +56,6 @@ class OrderMapperTest {
 
     @Test
     void shouldMapOrderToDTO() {
-        // Given
         User user = new User();
         user.setId(1L);
         user.setName("Test User");
@@ -74,10 +69,8 @@ class OrderMapperTest {
         order.setUser(user);
         order.setOrderProducts(Arrays.asList(product));
 
-        // When
         OrderOutputDTO dto = orderMapper.toDTO(order);
 
-        // Then
         assertNotNull(dto);
         assertEquals(1L, dto.getId());
         assertNotNull(dto.getUser());
@@ -88,7 +81,6 @@ class OrderMapperTest {
 
     @Test
     void shouldMapOrderInputDTOToEntity() {
-        // Given
         OrderInputDTO inputDTO = new OrderInputDTO();
         inputDTO.setUserId(1L);
         inputDTO.setProductIds(Arrays.asList(1L, 2L));
@@ -101,10 +93,8 @@ class OrderMapperTest {
         when(productService.findById(1L)).thenReturn(product1);
         when(productService.findById(2L)).thenReturn(product2);
 
-        // When
         Order order = orderMapper.toEntity(inputDTO);
 
-        // Then
         assertNotNull(order);
         assertEquals(user, order.getUser());
         assertEquals(2, order.getOrderProducts().size());
@@ -114,7 +104,6 @@ class OrderMapperTest {
 
     @Test
     void shouldMapMultipleOrdersToDTOs() {
-        // Given
         User user1 = new User();
         user1.setId(1L);
 
@@ -131,10 +120,8 @@ class OrderMapperTest {
         order2.setUser(user1);
         order2.setOrderProducts(Arrays.asList(product1));
 
-        // When
         List<OrderOutputDTO> dtos = orderMapper.toDTOs(Arrays.asList(order1, order2));
 
-        // Then
         assertNotNull(dtos);
         assertEquals(2, dtos.size());
         assertEquals(1L, dtos.get(0).getId());

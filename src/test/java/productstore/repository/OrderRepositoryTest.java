@@ -43,7 +43,6 @@ public class OrderRepositoryTest {
         userRepository.deleteAll();
     }
 
-    // Тест сохранения и получения заказа с продуктами
     @Test
     void shouldSaveAndRetrieveOrder() {
         User user = new User("Test User", "test@example.com");
@@ -61,7 +60,6 @@ public class OrderRepositoryTest {
         assertThat(savedOrder.getOrderProducts().size()).isEqualTo(1);
     }
 
-    // Тест удаления заказа, но не связанных продуктов
     @Test
     void shouldDeleteOrderAndRetainProducts() {
         Product product = new Product("Test Product", 100.0);
@@ -76,15 +74,12 @@ public class OrderRepositoryTest {
 
         orderRepository.delete(order);
 
-        // Убедитесь, что продукт не был удален после удаления заказа
         assertThat(productRepository.findAll().size()).isEqualTo(1);
         assertThat(orderRepository.findAll().size()).isEqualTo(0);
     }
 
-    // Тест обновления заказа и проверки связанных продуктов
     @Test
     void shouldUpdateOrderWithAdditionalProducts() {
-        // Given
         User user = new User("Test User", "test@example.com");
         userRepository.save(user);
 
@@ -97,19 +92,15 @@ public class OrderRepositoryTest {
         order.setOrderProducts(Collections.singletonList(product1));
         Order savedOrder = orderRepository.save(order);
 
-        // When
         savedOrder.setOrderProducts(Arrays.asList(product1, product2));
         Order updatedOrder = orderRepository.save(savedOrder);
 
-        // Then
         assertThat(updatedOrder.getOrderProducts().size()).isEqualTo(2);
         assertThat(updatedOrder.getOrderProducts()).containsExactlyInAnyOrder(product1, product2);
     }
 
-    // Тест получения заказа по ID
     @Test
     void shouldFindOrderById() {
-        // Given
         User user = new User("Test User", "test@example.com");
         userRepository.save(user);
 
@@ -120,17 +111,14 @@ public class OrderRepositoryTest {
         order.setOrderProducts(Collections.singletonList(product));
         Order savedOrder = orderRepository.save(order);
 
-        // When
         Optional<Order> foundOrder = orderRepository.findById(savedOrder.getId());
 
-        // Then
         assertThat(foundOrder.isPresent()).isTrue();
         assertThat(foundOrder.get().getId()).isEqualTo(savedOrder.getId());
         assertThat(foundOrder.get().getUser()).isEqualTo(user);
         assertThat(foundOrder.get().getOrderProducts()).containsExactly(product);
     }
 
-    // Тест получения всех заказов
     @Test
     void shouldFindAllOrders() {
         // Given
@@ -150,10 +138,8 @@ public class OrderRepositoryTest {
 
         orderRepository.saveAll(Arrays.asList(order1, order2));
 
-        // When
         List<Order> allOrders = orderRepository.findAll();
 
-        // Then
         assertThat(allOrders.size()).isEqualTo(2);
         assertThat(allOrders.get(0).getUser()).isIn(user1, user2);
         assertThat(allOrders.get(1).getOrderProducts()).containsAnyOf(product1, product2);

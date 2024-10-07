@@ -2,7 +2,6 @@ package productstore.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import productstore.controller.dto.input.ProductIdsDTO;
 import productstore.controller.dto.input.ProductInputDTO;
 import productstore.controller.dto.output.ProductOutputDTO;
 import productstore.controller.mapper.ProductMapper;
@@ -54,17 +53,11 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id " + id));
-
-        // Удалить продукт из всех заказов
         for (Order order : product.getOrders()) {
             order.getOrderProducts().remove(product);
-            orderRepository.save(order); // Сохраняем изменения
+            orderRepository.save(order);
         }
-
-        // Очистить список заказов у продукта, чтобы избежать ошибок при попытке удалить продукт
         product.getOrders().clear();
-
-        // Теперь можно удалить продукт
         productRepository.delete(product);
     }
 

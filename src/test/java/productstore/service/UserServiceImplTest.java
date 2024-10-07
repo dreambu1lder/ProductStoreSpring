@@ -43,7 +43,6 @@ public class UserServiceImplTest {
 
     @BeforeEach
     public void setUp() {
-        // Инициализация объектов для тестирования
         user = new User();
         user.setId(1L);
         user.setEmail("test@example.com");
@@ -62,7 +61,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testFindById() {
-        // Тест успешного поиска пользователя по ID
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
         User result = userService.findById(1L);
@@ -77,7 +75,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testFindById_NotFound() {
-        // Тест исключения, если пользователь не найден по ID
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.findById(1L));
@@ -88,7 +85,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetAllUsers() {
-        // Тест успешного получения всех пользователей
         when(userRepository.findAll()).thenReturn(Arrays.asList(user));
         when(userMapper.toDTOs(any())).thenReturn(Arrays.asList(userOutputDTO));
 
@@ -105,7 +101,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetUserById() {
-        // Тест успешного получения пользователя по ID
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(userMapper.toDTO(any())).thenReturn(userOutputDTO);
 
@@ -121,7 +116,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetUserById_NotFound() {
-        // Тест исключения, если пользователь не найден по ID
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getUserById(1L));
@@ -132,7 +126,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional
     public void testSaveUser() {
-        // Тест успешного сохранения пользователя
         when(userMapper.toEntity(any())).thenReturn(user);
         when(userRepository.save(any())).thenReturn(user);
         when(userMapper.toDTO(any())).thenReturn(userOutputDTO);
@@ -150,7 +143,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional
     public void testDeleteUserById() {
-        // Тест успешного удаления пользователя
         doNothing().when(userRepository).deleteById(anyLong());
 
         userService.deleteUserById(1L);
@@ -161,11 +153,8 @@ public class UserServiceImplTest {
     @Test
     @Transactional
     public void testUpdateUserById() {
-        // Тест успешного обновления пользователя
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        // Добавим мок-сохранение, которое обновляет объект user
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        // Мокаем маппер так, чтобы он возвращал DTO с актуальными данными из user
         when(userMapper.toDTO(any(User.class))).thenAnswer(invocation -> {
             User savedUser = invocation.getArgument(0);
             UserOutputDTO dto = new UserOutputDTO();
@@ -177,7 +166,7 @@ public class UserServiceImplTest {
         UserOutputDTO result = userService.updateUserById(1L, userChangeEmailDTO);
 
         assertNotNull(result);
-        assertEquals(userChangeEmailDTO.getEmail(), result.getEmail()); // Проверяем обновленный email
+        assertEquals(userChangeEmailDTO.getEmail(), result.getEmail());
 
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(user);
@@ -187,7 +176,6 @@ public class UserServiceImplTest {
     @Test
     @Transactional
     public void testUpdateUserById_NotFound() {
-        // Тест исключения, если пользователь не найден для обновления
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.updateUserById(1L, userChangeEmailDTO));

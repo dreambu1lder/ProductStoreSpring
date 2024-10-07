@@ -1,6 +1,5 @@
 package productstore.service;
 
-import productstore.controller.dto.input.ProductIdsDTO;
 import productstore.controller.dto.input.ProductInputDTO;
 import productstore.controller.dto.output.ProductOutputDTO;
 import productstore.model.Product;

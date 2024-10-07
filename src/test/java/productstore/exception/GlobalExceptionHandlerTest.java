@@ -6,9 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import productstore.controller.OrderController;
@@ -37,7 +35,6 @@ public class GlobalExceptionHandlerTest {
     @InjectMocks
     private GlobalExceptionHandler globalExceptionHandler;
 
-    // Мокируем сервисы, используемые в контроллерах
     @Mock
     private UserService userService;
     @Mock
@@ -47,7 +44,6 @@ public class GlobalExceptionHandlerTest {
 
     @BeforeEach
     public void setUp() {
-        // Настраиваем контроллеры и обработчик исключений
         mockMvc = MockMvcBuilders.standaloneSetup(
                         new UserController(userService),
                         new OrderController(orderService),
@@ -58,7 +54,6 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     public void testHandleUserNotFoundException() throws Exception {
-        // Настраиваем сервис на генерацию исключения
         when(userService.getUserById(anyLong())).thenThrow(new UserNotFoundException("User with id 999 not found."));
 
         mockMvc.perform(get("/api/users/999"))
@@ -68,7 +63,6 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     public void testHandleOrderNotFoundException() throws Exception {
-        // Настраиваем сервис на генерацию исключения
         when(orderService.getOrderById(anyLong())).thenThrow(new OrderNotFoundException("Order with id 999 not found."));
 
         mockMvc.perform(get("/api/orders/999"))
@@ -78,7 +72,6 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     public void testHandleProductNotFoundException() throws Exception {
-        // Настраиваем сервис на генерацию исключения
         when(productService.getProductById(anyLong())).thenThrow(new ProductNotFoundException("Product with id 999 not found."));
 
         mockMvc.perform(get("/api/products/999"))
@@ -88,7 +81,6 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     public void testHandleValidationExceptions() throws Exception {
-        // Создаем запрос, который приведет к ошибке валидации
         String invalidRequestBody = "{ \"userId\": null, \"productIds\": [] }";
 
         mockMvc.perform(post("/api/orders")

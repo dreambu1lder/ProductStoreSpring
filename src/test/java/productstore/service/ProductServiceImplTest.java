@@ -45,7 +45,6 @@ public class ProductServiceImplTest {
 
     @BeforeEach
     public void setUp() {
-        // Инициализация объектов для тестирования
         product = new Product("Test Product", 10.0);
         product.setId(1L);
 
@@ -61,7 +60,6 @@ public class ProductServiceImplTest {
         order = new Order();
         order.setId(1L);
 
-        // Устанавливаем заказы для продукта
         product.setOrders(new ArrayList<>(Collections.singletonList(order)));
         order.setOrderProducts(new ArrayList<>(Collections.singletonList(product)));
     }
@@ -70,7 +68,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testFindById() {
-        // Тест успешного поиска продукта по ID
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
 
         Product result = productService.findById(1L);
@@ -84,7 +81,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testFindById_NotFound() {
-        // Тест исключения, если продукт не найден по ID
         when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> productService.findById(1L));
@@ -95,7 +91,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetAllProducts() {
-        // Тест успешного получения всех продуктов
         when(productRepository.findAll()).thenReturn(Arrays.asList(product));
         when(productMapper.toDTOs(any())).thenReturn(Arrays.asList(productOutputDTO));
 
@@ -112,7 +107,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetProductById() {
-        // Тест успешного получения продукта по ID
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(productMapper.toDTO(any())).thenReturn(productOutputDTO);
 
@@ -128,7 +122,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetProductById_NotFound() {
-        // Тест исключения, если продукт не найден по ID
         when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> productService.getProductById(1L));
@@ -139,7 +132,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional
     public void testSaveProduct() {
-        // Тест успешного сохранения продукта
         when(productMapper.toEntity(any())).thenReturn(product);
         when(productRepository.save(any())).thenReturn(product);
         when(productMapper.toDTO(any())).thenReturn(productOutputDTO);
@@ -157,23 +149,20 @@ public class ProductServiceImplTest {
     @Test
     @Transactional
     public void testDeleteProductById() {
-        // Настраиваем поведение мока репозиториев
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         productService.deleteProductById(1L);
 
-        // Проверяем, что методы репозиториев были вызваны
         verify(productRepository, times(1)).findById(1L);
-        verify(orderRepository, times(1)).save(any(Order.class)); // Сохраняем изменения заказа
-        verify(productRepository, times(1)).delete(product); // Удаляем продукт
+        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(productRepository, times(1)).delete(product);
     }
 
 
     @Test
     @Transactional
     public void testDeleteProductById_NotFound() {
-        // Тест исключения, если продукт не найден для удаления
         when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> productService.deleteProductById(1L));
@@ -184,7 +173,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional
     public void testUpdateProductById() {
-        // Тест успешного обновления продукта
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(productRepository.save(any())).thenReturn(product);
         when(productMapper.toDTO(any())).thenReturn(productOutputDTO);
@@ -203,7 +191,6 @@ public class ProductServiceImplTest {
     @Test
     @Transactional
     public void testUpdateProductById_NotFound() {
-        // Тест исключения, если продукт не найден для обновления
         when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> productService.updateProductById(1L, productInputDTO));

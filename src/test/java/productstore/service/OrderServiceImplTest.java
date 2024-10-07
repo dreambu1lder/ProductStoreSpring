@@ -3,12 +3,8 @@ package productstore.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.mockito.exceptions.base.MockitoException;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.annotation.Transactional;
 import productstore.controller.dto.input.OrderInputDTO;
@@ -50,7 +46,6 @@ public class OrderServiceImplTest {
 
     @BeforeEach
     public void setUp() {
-        // Инициализация объектов для тестирования
         order = new Order();
         order.setId(1L);
         Product product1 = new Product("Test Product", 10.0);
@@ -75,7 +70,6 @@ public class OrderServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetAllOrders() {
-        // Тест успешного получения всех заказов
         when(orderRepository.findAll()).thenReturn(Arrays.asList(order));
         when(orderMapper.toDTOs(any())).thenReturn(Arrays.asList(orderOutputDTO));
 
@@ -92,7 +86,6 @@ public class OrderServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetOrderById() {
-        // Тест успешного получения заказа по ID
         when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order));
         when(orderMapper.toDTO(any())).thenReturn(orderOutputDTO);
 
@@ -108,7 +101,6 @@ public class OrderServiceImplTest {
     @Test
     @Transactional(readOnly = true)
     public void testGetOrderById_NotFound() {
-        // Тест исключения, если заказ не найден по ID
         when(orderRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(OrderNotFoundException.class, () -> orderService.getOrderById(1L));
@@ -119,7 +111,6 @@ public class OrderServiceImplTest {
     @Test
     @Transactional
     public void testSaveOrder() {
-        // Тест успешного сохранения заказа
         when(orderMapper.toEntity(any())).thenReturn(order);
         when(orderRepository.save(any())).thenReturn(order);
         when(orderMapper.toDTO(any())).thenReturn(orderOutputDTO);
@@ -137,20 +128,18 @@ public class OrderServiceImplTest {
     @Test
     @Transactional
     public void testDeleteOrderById() {
-        // Тест успешного удаления заказа
         when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order));
 
         orderService.deleteOrderById(1L);
 
         verify(orderRepository, times(1)).findById(1L);
-        verify(orderRepository, times(1)).save(order); // Сначала обновляем связи
-        verify(orderRepository, times(1)).deleteById(1L); // Затем удаляем заказ
+        verify(orderRepository, times(1)).save(order);
+        verify(orderRepository, times(1)).deleteById(1L);
     }
 
     @Test
     @Transactional
     public void testDeleteOrderById_NotFound() {
-        // Тест исключения, если заказ не найден для удаления
         when(orderRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(OrderNotFoundException.class, () -> orderService.deleteOrderById(1L));
@@ -161,7 +150,6 @@ public class OrderServiceImplTest {
     @Test
     @Transactional
     public void testUpdateOrderById() {
-        // Тест успешного обновления заказа
         when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order));
         when(orderMapper.mapProductIdsToProducts(any())).thenReturn(Arrays.asList(product));
         when(orderRepository.save(any())).thenReturn(order);
@@ -181,7 +169,6 @@ public class OrderServiceImplTest {
     @Test
     @Transactional
     public void testUpdateOrderById_NotFound() {
-        // Тест исключения, если заказ не найден для обновления
         when(orderRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(OrderNotFoundException.class, () -> orderService.updateOrderById(1L, productIdsDTO));

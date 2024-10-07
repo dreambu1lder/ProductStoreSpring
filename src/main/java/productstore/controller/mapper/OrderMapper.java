@@ -20,7 +20,6 @@ public abstract class OrderMapper {
     private UserService userService;
     private ProductService productService;
 
-    // Сеттеры для внедрения зависимостей
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;

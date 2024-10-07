@@ -46,7 +46,6 @@ public class ProductRepositoryTest {
         Product product = new Product("Test Product", 100.0);
         Product savedProduct = productRepository.save(product);
 
-        // Assertions
         assertThat(savedProduct.getId()).isNotNull();
         assertThat(savedProduct.getName()).isEqualTo("Test Product");
         assertThat(savedProduct.getPrice()).isEqualTo(100.0);
@@ -59,7 +58,6 @@ public class ProductRepositoryTest {
 
         Product foundProduct = productRepository.findById(product.getId()).orElse(null);
 
-        // Assertions
         assertThat(foundProduct).isNotNull();
         assertThat(foundProduct.getId()).isEqualTo(product.getId());
         assertThat(foundProduct.getName()).isEqualTo("Test Product");
@@ -70,14 +68,12 @@ public class ProductRepositoryTest {
         Product product = new Product("Old Product", 100.0);
         product = productRepository.save(product);
 
-        // Update product details
         product.setName("Updated Product");
         product.setPrice(150.0);
         productRepository.save(product);
 
         Product updatedProduct = productRepository.findById(product.getId()).orElse(null);
 
-        // Assertions
         assertThat(updatedProduct).isNotNull();
         assertThat(updatedProduct.getName()).isEqualTo("Updated Product");
         assertThat(updatedProduct.getPrice()).isEqualTo(150.0);
@@ -85,37 +81,29 @@ public class ProductRepositoryTest {
 
     @Test
     void shouldDeleteProductAndNotAffectOrders() {
-        // Создаем и сохраняем продукт
         Product product = new Product("Test Product", 100.0);
         product = productRepository.save(product);
 
-        // Создаем и сохраняем пользователя
         User user = new User("Test User", "test@example.com");
         user = userRepository.save(user);
 
-        // Создаем и сохраняем заказ, связанный с продуктом
         Order order = new Order(user);
         order.setOrderProducts(Collections.singletonList(product));
         order = orderRepository.save(order);
 
-        // Проверяем, что продукт связан с заказом
         assertThat(order.getOrderProducts()).contains(product);
 
-        // Удаляем продукт из заказов
         List<Order> ordersWithProduct = orderRepository.findAllByOrderProductsContaining(product);
         for (Order o : ordersWithProduct) {
             o.getOrderProducts().remove(product);
-            orderRepository.save(o); // Сохраняем изменения в заказе
+            orderRepository.save(o);
         }
 
-        // Теперь можно удалить продукт из репозитория
         productRepository.delete(product);
 
-        // Проверить, что продукт удален из репозитория
         List<Product> allProducts = productRepository.findAll();
         assertThat(allProducts).doesNotContain(product);
 
-        // Проверить, что заказ все еще существует и не затронут
         Order foundOrder = orderRepository.findById(order.getId()).orElse(null);
         assertThat(foundOrder).isNotNull();
         assertThat(foundOrder.getOrderProducts()).doesNotContain(product);
@@ -133,20 +121,18 @@ public class ProductRepositoryTest {
 
         Order order1 = new Order(user1);
         order1.setOrderProducts(Collections.singletonList(product));
-        product.getOrders().add(order1); // Двусторонняя ассоциация
+        product.getOrders().add(order1);
         orderRepository.save(order1);
 
         Order order2 = new Order(user2);
         order2.setOrderProducts(Collections.singletonList(product));
-        product.getOrders().add(order2); // Двусторонняя ассоциация
+        product.getOrders().add(order2);
         orderRepository.save(order2);
 
-        // Загружаем продукт из базы данных
         Product foundProduct = productRepository.findById(product.getId()).orElse(null);
 
-        // Проверяем, что продукт связан с двумя заказами
         assertThat(foundProduct).isNotNull();
-        assertThat(foundProduct.getOrders().size()).isEqualTo(2); // Ожидается 2 заказа
+        assertThat(foundProduct.getOrders().size()).isEqualTo(2);
     }
 
     @Test
@@ -161,20 +147,16 @@ public class ProductRepositoryTest {
 
         Order order1 = new Order(user);
         order1.setOrderProducts(Collections.singletonList(product1));
-        product1.getOrders().add(order1); // Двусторонняя ассоциация
+        product1.getOrders().add(order1);
         orderRepository.save(order1);
 
         Order order2 = new Order(user);
         order2.setOrderProducts(Collections.singletonList(product2));
-        product2.getOrders().add(order2); // Двусторонняя ассоциация
+        product2.getOrders().add(order2);
         orderRepository.save(order2);
 
         List<Product> allProducts = productRepository.findAll();
 
-        // Логгирование для отладки
-        allProducts.forEach(product -> System.out.println("Product: " + product.getName() + ", Orders: " + product.getOrders()));
-
-        // Assertions
         assertThat(allProducts.size()).isEqualTo(2);
         assertThat(allProducts).extracting(Product::getName).containsExactlyInAnyOrder("Product 1", "Product 2");
         assertThat(allProducts.get(0).getOrders()).isNotEmpty();
