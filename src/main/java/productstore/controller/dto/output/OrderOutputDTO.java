@@ -4,23 +4,23 @@ import java.util.List;
 
 public class OrderOutputDTO {
 
-    private long id;
+    private Long id;
     private UserOutputDTO user;
     private List<ProductOutputDTO> products;
 
     public OrderOutputDTO() {}
 
-    public OrderOutputDTO(long id, UserOutputDTO user, List<ProductOutputDTO> products) {
+    public OrderOutputDTO(Long id, UserOutputDTO user, List<ProductOutputDTO> products) {
         this.id = id;
         this.user = user;
         this.products = products;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

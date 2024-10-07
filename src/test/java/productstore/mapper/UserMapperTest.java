@@ -87,7 +87,7 @@ class UserMapperTest {
 
         // Then
         assertNotNull(user);
-        assertEquals(0L, user.getId()); // Проверяем, что id игнорируется при маппинге
+        assertNull(user.getId()); // Проверяем, что id игнорируется при маппинге
         assertEquals("John Doe", user.getName());
         assertEquals("john@example.com", user.getEmail());
         assertTrue(user.getOrders() == null || user.getOrders().isEmpty()); // Проверяем, что orders - либо null, либо пустой список

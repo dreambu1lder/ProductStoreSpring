@@ -84,7 +84,7 @@ class ProductMapperTest {
 
         // Then
         assertNotNull(product);
-        assertEquals(0L, product.getId()); // замените на 0L, если тип `id` - `long`
+        assertNull(product.getId()); // замените на 0L, если тип `id` - `long`
         assertEquals("New Product", product.getName());
         assertEquals(120.0, product.getPrice());
     }

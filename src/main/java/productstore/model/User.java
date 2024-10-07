@@ -12,7 +12,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -36,11 +36,11 @@ public class User {
         this.orders = orders;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -91,12 +91,12 @@ public class User {
     }
 
     public static class Builder {
-        private long id;
+        private Long id;
         private String name;
         private String email;
         private List<Order> orders = new ArrayList<>();
 
-        public Builder withId(long id) {
+        public Builder withId(Long id) {
             this.id = id;
             return this;
         }
