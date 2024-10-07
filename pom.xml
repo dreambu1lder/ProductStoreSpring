@@ -21,38 +21,31 @@
   </properties>
 
   <dependencies>
-
-    <!-- Hibernate Validator -->
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
-      <version>8.0.1.Final</version> <!-- Убедитесь, что версия актуальна -->
+      <version>8.0.1.Final</version>
     </dependency>
-
-    <!-- Bean Validation API -->
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
-      <version>3.0.2</version> <!-- Убедитесь, что версия актуальна -->
+      <version>3.0.2</version>
     </dependency>
-
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.17.2</version> <!-- Замените на актуальную версию -->
+      <version>2.17.2</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>2.17.2</version> <!-- Замените на актуальную версию -->
+      <version>2.17.2</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>2.17.2</version> <!-- Замените на актуальную версию -->
+      <version>2.17.2</version>
     </dependency>
-
-    <!-- MapStruct Dependency -->
     <dependency>
       <groupId>org.mapstruct</groupId>
       <artifactId>mapstruct</artifactId>
@@ -64,23 +57,17 @@
       <version>1.5.5.Final</version>
       <scope>provided</scope>
     </dependency>
-
-    <!-- Jakarta Servlet API -->
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
       <version>6.0.0</version>
-      <scope>provided</scope> <!-- Используем scope provided, так как Tomcat предоставляет реализацию -->
+      <scope>provided</scope>
     </dependency>
-
-    <!-- Spring Core and Context -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <version>${spring.version}</version>
     </dependency>
-
-    <!-- Spring Web for REST Controllers -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
@@ -91,8 +78,6 @@
       <artifactId>spring-webmvc</artifactId>
       <version>${spring.version}</version>
     </dependency>
-
-    <!-- Spring Data JPA for Hibernate Integration -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-orm</artifactId>
@@ -103,121 +88,85 @@
       <artifactId>spring-data-jpa</artifactId>
       <version>3.3.3</version>
     </dependency>
-
-    <!-- Hibernate Core for JPA -->
     <dependency>
       <groupId>org.hibernate.orm</groupId>
       <artifactId>hibernate-core</artifactId>
       <version>${hibernate.version}</version>
     </dependency>
-
-    <!-- PostgreSQL Driver -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.7.3</version>
     </dependency>
-
-    <!-- HikariCP Connection Pool -->
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
       <version>5.1.0</version>
     </dependency>
-
-    <!-- SLF4J and Logback for Logging -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>2.0.16</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.5.7</version>
-    </dependency>
-
     <dependency>
       <groupId>org.glassfish</groupId>
       <artifactId>jakarta.el</artifactId>
-      <version>4.0.2</version> <!-- или соответствующую версию вашей конфигурации Jakarta -->
+      <version>4.0.2</version>
     </dependency>
-
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>
       <artifactId>json-path</artifactId>
-      <version>2.9.0</version> <!-- или соответствующую версию вашей конфигурации -->
+      <version>2.9.0</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- JUnit for Testing -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.10.3</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Mockito for Testing -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>5.11.0</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Mockito JUnit 5 Extension -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.12.0</version> <!-- Проверьте последнюю версию -->
+      <version>5.12.0</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Spring Test for Testing Spring Components -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
       <version>${spring.version}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.skyscreamer</groupId>
       <artifactId>jsonassert</artifactId>
       <version>1.5.3</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.25.3</version> <!-- Проверьте актуальную версию -->
+      <version>3.25.3</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Testcontainers для PostgreSQL -->
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
       <version>1.19.8</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Testcontainers для интеграции с JUnit Jupiter (если используете JUnit 5) -->
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>1.19.8</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>
     <finalName>ProductStore</finalName>
     <plugins>
-      <!-- Maven Compiler Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -234,15 +183,11 @@
           </annotationProcessorPaths>
         </configuration>
       </plugin>
-
-      <!-- Maven WAR Plugin for Packaging as WAR -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.4.0</version>
       </plugin>
-
-      <!-- Maven Surefire Plugin for Running Unit Tests -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
