@@ -32,6 +32,12 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
+    @GetMapping("/products")
+    public ResponseEntity<List<OrderOutputDTO>> getAllOrdersWithProducts() {
+        List<OrderOutputDTO> ordersWithProducts = orderService.getAllOrdersWithProducts();
+        return new ResponseEntity<>(ordersWithProducts, HttpStatus.OK);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrderById(@PathVariable("id") Long id) {
         orderService.deleteOrderById(id);

@@ -10,6 +10,8 @@ public interface OrderService {
 
     List<OrderOutputDTO> getAllOrders();
 
+    List<OrderOutputDTO> getAllOrdersWithProducts();
+
     OrderOutputDTO getOrderById(Long id);
 
     OrderOutputDTO saveOrder(OrderInputDTO orderInputDTO);
